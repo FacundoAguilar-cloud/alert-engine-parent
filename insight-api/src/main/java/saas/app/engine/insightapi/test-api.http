@@ -1,0 +1,18 @@
+### Guardar un sitio nuevo
+POST http://localhost:8080/api/sites
+Content-Type: application/json
+
+{
+  "url": "https://es.wikipedia.org/wiki/Java_(lenguaje_de_programaci%C3%B3n)",
+  "name": "Monitor Wikipedia Java",
+  "cssSelector": "#firstHeading",
+  "checkIntervalMinutes": 120,
+  "active": true
+}
+
+
+### 2. Obtener todos los sitios (GET)
+GET http://localhost:8080/api/sites
+
+
+

@@ -38,5 +38,5 @@ public class MonitoredSite {
     @UpdateTimestamp
     private LocalDateTime lastCheckedAt;
 
-    private boolean isActive;
+    private boolean active;
 }
