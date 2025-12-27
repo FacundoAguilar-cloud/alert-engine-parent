@@ -15,4 +15,8 @@ Content-Type: application/json
 GET http://localhost:8080/api/sites
 
 
+### 3 Prueba de integración
+GET http://localhost:8080/api/snapshots/site/1
+
+
 
