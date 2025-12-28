@@ -1,5 +1,7 @@
 package saas.app.engine.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import saas.app.core.domain.MonitoredSite;
 import saas.app.core.repository.MonitoredSiteRepository;
@@ -24,10 +26,32 @@ public class SiteController {
     }
 
     @PostMapping
-    public  MonitoredSite create(@RequestBody MonitoredSite site){
+    public ResponseEntity <MonitoredSite> create(@RequestBody MonitoredSite site){
         site.setActive(true);
-        return repository.save(site);
+        if (site.getCreatedAt() == null){
+            site.setCreatedAt(java.time.LocalDateTime.now());
+        }
+
+        MonitoredSite savedSite = repository.save(site);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedSite);
+
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity <Void> delete(@PathVariable Long id){
+        if (!repository.existsById(id)){
+            return ResponseEntity.notFound().build();
+        }
+        repository.deleteById(id);
+
+        return  ResponseEntity.noContent().build();
+
+
+    }
+
+    @PatchMapping("/{id}/toggle")
+    public ResponseEntity <MonitoredSite> toggleStatus()
 
 
 
