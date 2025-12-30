@@ -16,8 +16,12 @@ public class ScraperService {
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                     .timeout(10000)
                     .get();
-
             Element element = doc.selectFirst(cssSelector);
+
+            if (element == null) {
+                return "VALOR_NO_ENCONTRADO";
+            }
+
             return  (element != null) ? element.text() : "No encontrado";
         } catch (IOException e){
             return  "Error de conexión al intentar conectar con la URL" + url + "Detalle:" +  e.getMessage();

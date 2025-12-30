@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface MonitoredSiteRepository extends JpaRepository <MonitoredSite, Long> {
     List <MonitoredSite> findByActiveTrue();
+
+    List<MonitoredSite> id(Long id);
 }

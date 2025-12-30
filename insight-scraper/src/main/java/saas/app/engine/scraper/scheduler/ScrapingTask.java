@@ -2,15 +2,19 @@ package saas.app.engine.scraper.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import saas.app.core.domain.MonitoredSite;
 import saas.app.core.domain.SiteSnapshot;
+import saas.app.core.dto.SiteChangeEvent;
 import saas.app.core.repository.MonitoredSiteRepository;
 import saas.app.core.repository.SiteSnapshotRepository;
+import saas.app.engine.scraper.config.RabbitConfig;
 import saas.app.engine.scraper.service.ScraperService;
 import saas.app.engine.scraper.service.TelegramNotificationService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +26,8 @@ public class ScrapingTask {
     private final SiteSnapshotRepository snapshotRepository;
     private final ScraperService scraperService;
     private final TelegramNotificationService telegramService;
+
+    private final RabbitTemplate rabbitTemplate;
 
     @Scheduled(fixedRate = 60000)
     public void runScrapingCyle(){
@@ -53,10 +59,22 @@ public class ScrapingTask {
 
                 if (!currentValue.equals(previousValue)) {
                     log.warn("ALERTA DE CAMBIO DETECTADA");
-                    // Asegúrate de que el nombre coincida con tu Service
-                    telegramService.sendMeTelegramAlert(site.getName(), previousValue, currentValue);
-                    site.setLastCheckedAt(java.time.LocalDateTime.now());
-                    siteRepository.save(site);
+                 SiteChangeEvent event = SiteChangeEvent.builder()
+                         .siteId(site.getId())
+                         .siteName(site.getName())
+                         .oldValue(previousValue)
+                         .newValue(currentValue)
+                         .timestamp(java.time.LocalDateTime.now())
+                         .build();
+
+                 rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE,
+                         RabbitConfig.ROUTING_KEY, event);
+                 log.info("Evento enviado a RabbitMQ correctamente.");
+
+                 telegramService.sendMeTelegramAlert(site.getName(), previousValue, currentValue);
+
+                 //site.getLastCheckedAt(LocalDateTime.now());
+                 siteRepository.save(site);
                 }
             }
 

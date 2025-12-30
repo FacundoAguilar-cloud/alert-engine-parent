@@ -51,7 +51,13 @@ public class SiteController {
     }
 
     @PatchMapping("/{id}/toggle")
-    public ResponseEntity <MonitoredSite> toggleStatus()
+    public ResponseEntity <MonitoredSite> toggleStatus(@PathVariable Long id){
+        return  repository.findById(id).map(site -> {
+            site.setActive(!site.isActive());
+              return ResponseEntity.ok(repository.save(site));
+                }
+                ).orElse(ResponseEntity.notFound().build());
+    }
 
 
 
