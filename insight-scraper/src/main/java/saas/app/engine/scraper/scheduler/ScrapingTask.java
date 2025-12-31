@@ -73,7 +73,7 @@ public class ScrapingTask {
 
                  telegramService.sendMeTelegramAlert(site.getName(), previousValue, currentValue);
 
-                 //site.getLastCheckedAt(LocalDateTime.now());
+                 site.setLastCheckedAt(LocalDateTime.now());
                  siteRepository.save(site);
                 }
             }
