@@ -29,6 +29,6 @@ public class SiteSnapshot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "monitored_site_id")
-    private MonitoredSite monitoredSite;
+    private Product product;
 
 }

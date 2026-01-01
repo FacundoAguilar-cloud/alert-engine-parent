@@ -3,7 +3,7 @@ package saas.app.engine.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import saas.app.core.domain.MonitoredSite;
+import saas.app.core.domain.Product;
 import saas.app.core.repository.MonitoredSiteRepository;
 
 import java.util.List;
@@ -21,18 +21,18 @@ public class SiteController {
     }
 
     @GetMapping
-    public List <MonitoredSite> getAll(){
+    public List <Product> getAll(){
         return repository.findAll();
     }
 
     @PostMapping
-    public ResponseEntity <MonitoredSite> create(@RequestBody MonitoredSite site){
+    public ResponseEntity <Product> create(@RequestBody Product site){
         site.setActive(true);
         if (site.getCreatedAt() == null){
             site.setCreatedAt(java.time.LocalDateTime.now());
         }
 
-        MonitoredSite savedSite = repository.save(site);
+        Product savedSite = repository.save(site);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedSite);
 
@@ -51,7 +51,7 @@ public class SiteController {
     }
 
     @PatchMapping("/{id}/toggle")
-    public ResponseEntity <MonitoredSite> toggleStatus(@PathVariable Long id){
+    public ResponseEntity <Product> toggleStatus(@PathVariable Long id){
         return  repository.findById(id).map(site -> {
             site.setActive(!site.isActive());
               return ResponseEntity.ok(repository.save(site));

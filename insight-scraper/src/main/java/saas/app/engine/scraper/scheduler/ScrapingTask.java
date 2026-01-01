@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import saas.app.core.domain.MonitoredSite;
+import saas.app.core.domain.Product;
 import saas.app.core.domain.SiteSnapshot;
-import saas.app.core.dto.SiteChangeEvent;
+import saas.app.core.dto.PriceUpdateEvent;
 import saas.app.core.repository.MonitoredSiteRepository;
 import saas.app.core.repository.SiteSnapshotRepository;
 import saas.app.engine.scraper.config.RabbitConfig;
@@ -33,11 +33,11 @@ public class ScrapingTask {
     public void runScrapingCyle(){
         log.info("Iniciando ciclo de scraping...");
         try {
-            List<MonitoredSite> sites = siteRepository.findByActiveTrue();
+            List<Product> sites = siteRepository.findByActiveTrue();
             if (sites.isEmpty()) {
                 log.info("No hay sitios activos para monitorear.");
             }
-            for (MonitoredSite site : sites) {
+            for (Product site : sites) {
                 processSite(site);
             }
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class ScrapingTask {
     }
 
 
-    private void processSite(MonitoredSite site) {
+    private void processSite(Product site) {
         try {
             log.info("Analizando: {}", site.getName());
             String currentValue = scraperService.getElementText(site.getUrl(), site.getCssSelector());
@@ -59,7 +59,7 @@ public class ScrapingTask {
 
                 if (!currentValue.equals(previousValue)) {
                     log.warn("ALERTA DE CAMBIO DETECTADA");
-                 SiteChangeEvent event = SiteChangeEvent.builder()
+                 PriceUpdateEvent event = PriceUpdateEvent.builder()
                          .siteId(site.getId())
                          .siteName(site.getName())
                          .oldValue(previousValue)
@@ -79,7 +79,7 @@ public class ScrapingTask {
             }
 
             SiteSnapshot snapshot = SiteSnapshot.builder()
-                    .monitoredSite(site)
+                    .product(site)
                     .capturedValue(currentValue)
                     .snapshotTime(java.time.LocalDateTime.now())
                     .build();

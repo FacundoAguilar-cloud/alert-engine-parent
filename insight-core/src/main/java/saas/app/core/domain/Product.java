@@ -9,34 +9,22 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
-@Table(name = "monitored_sites")
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class MonitoredSite {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String url;
-
-    @Column(nullable = false)
     private String name;
 
-    private String cssSelector;
+    private String description;
 
-    private Integer checkIntervalMinutes;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List <ProductLink> links;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime lastCheckedAt;
-
-    private boolean active;
 }
