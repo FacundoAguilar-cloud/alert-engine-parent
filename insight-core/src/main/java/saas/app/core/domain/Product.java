@@ -22,9 +22,17 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
+    private String brand;
+
+    private String category;
+
+    private String gender;
+
     private String description;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List <ProductLink> links;
+
+    //agregar luego un dato que contenga una imagen de referencia para el catalogo de cierto producto
 
 }

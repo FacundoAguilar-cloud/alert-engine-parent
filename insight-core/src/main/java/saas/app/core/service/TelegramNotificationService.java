@@ -1,4 +1,4 @@
-package saas.app.engine.scraper.service;
+package saas.app.core.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

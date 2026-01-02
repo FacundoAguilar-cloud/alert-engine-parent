@@ -11,15 +11,18 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class PriceUpdateEvent implements Serializable { //por un tema de seguridad usamos este DTO y no la entidad, ademas de temas de peso y acoplamiento
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProductUpdateEvent implements Serializable { //por un tema de seguridad usamos este DTO y no la entidad, ademas de temas de peso y acoplamiento
     private Long productId;
-    private String productName;
+    private Long linkId;
     private String storeName;
-    private String url;
+
     private BigDecimal currentPrice;
-    private String currency;
-    private String installmentsInfo;
-    private Boolean freeShipping;
+    private Integer installments;
+    private Boolean hasFreeShipping;
 
     private LocalDateTime timestamp;
+
+    private Boolean isAvailable;
 }

@@ -7,12 +7,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import saas.app.core.domain.Product;
 import saas.app.core.domain.SiteSnapshot;
-import saas.app.core.dto.PriceUpdateEvent;
-import saas.app.core.repository.MonitoredSiteRepository;
+import saas.app.core.dto.ProductUpdateEvent;
 import saas.app.core.repository.SiteSnapshotRepository;
 import saas.app.engine.scraper.config.RabbitConfig;
 import saas.app.engine.scraper.service.ScraperService;
-import saas.app.engine.scraper.service.TelegramNotificationService;
+import saas.app.core.service.TelegramNotificationService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,7 +58,7 @@ public class ScrapingTask {
 
                 if (!currentValue.equals(previousValue)) {
                     log.warn("ALERTA DE CAMBIO DETECTADA");
-                 PriceUpdateEvent event = PriceUpdateEvent.builder()
+                 ProductUpdateEvent event = ProductUpdateEvent.builder()
                          .siteId(site.getId())
                          .siteName(site.getName())
                          .oldValue(previousValue)

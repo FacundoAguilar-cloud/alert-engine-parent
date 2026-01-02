@@ -2,8 +2,9 @@ package saas.app.core.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import saas.app.core.domain.SiteChangeLog;
+import saas.app.core.domain.ProductLink;
 
 @Repository
-public interface SiteChangeLogRepository extends JpaRepository <SiteChangeLog, Long> {
+public interface ProductLinkRepository extends JpaRepository<ProductLink, Long> {
+    ProductLink findById();
 }
