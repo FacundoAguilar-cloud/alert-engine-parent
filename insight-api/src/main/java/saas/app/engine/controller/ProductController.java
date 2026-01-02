@@ -1,27 +1,30 @@
 package saas.app.engine.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import saas.app.core.domain.Product;
+import saas.app.core.repository.ProductLinkRepository;
+import saas.app.engine.dto.ProductComparisonDTO;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/sites")
+@RequestMapping("/api/products")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*") //para que el front end pueda consultar sin errores de CORS
+
+public class ProductController {
+
+    private final ProductRepository productRepository;
+    private final ProductLinkRepository linkRepository;
 
 
-public class SiteController {
 
-    private final MonitoredSiteRepository repository;
-
-    public SiteController(MonitoredSiteRepository repository) {
-        this.repository = repository;
-    }
-
-    @GetMapping
-    public List <Product> getAll(){
-        return repository.findAll();
+    @GetMapping("/{id}/comparison") //Basicamente va a ser el endpoint mas importante, compara los precios de un producto específico
+    public ResponseEntity <ProductComparisonDTO> getProductComparison(@PathVariable Long id){
+        Product product = productRepository
     }
 
     @PostMapping

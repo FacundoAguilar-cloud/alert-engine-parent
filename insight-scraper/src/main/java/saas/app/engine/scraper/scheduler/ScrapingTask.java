@@ -5,39 +5,36 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import saas.app.core.domain.Product;
-import saas.app.core.domain.SiteSnapshot;
+import saas.app.core.domain.ProductLink;
 import saas.app.core.dto.ProductUpdateEvent;
-import saas.app.core.repository.SiteSnapshotRepository;
+import saas.app.core.repository.ProductLinkRepository;
 import saas.app.engine.scraper.config.RabbitConfig;
+import saas.app.engine.scraper.dto.ScraperData;
 import saas.app.engine.scraper.service.ScraperService;
-import saas.app.core.service.TelegramNotificationService;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class ScrapingTask {
-    private final MonitoredSiteRepository siteRepository;
-    private final SiteSnapshotRepository snapshotRepository;
+public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recolector de datos
+    private final ProductLinkRepository linkRepository;
     private final ScraperService scraperService;
-    private final TelegramNotificationService telegramService;
-
     private final RabbitTemplate rabbitTemplate;
 
     @Scheduled(fixedRate = 60000)
     public void runScrapingCyle(){
         log.info("Iniciando ciclo de scraping...");
         try {
-            List<Product> sites = siteRepository.findByActiveTrue();
-            if (sites.isEmpty()) {
-                log.info("No hay sitios activos para monitorear.");
+            List<ProductLink> links = linkRepository.findAll();
+            if (links.isEmpty()) {
+                log.info("No hay links para procesar.");
             }
-            for (Product site : sites) {
-                processSite(site);
+            for (ProductLink link : links) {
+                processLink(link);
             }
         } catch (Exception e) {
             log.error("Error en el ciclo de scraping: {}", e.getMessage());
@@ -46,48 +43,32 @@ public class ScrapingTask {
     }
 
 
-    private void processSite(Product site) {
+    private void processLink(ProductLink link) {
         try {
-            log.info("Analizando: {}", site.getName());
-            String currentValue = scraperService.getElementText(site.getUrl(), site.getCssSelector());
+            log.info("Analizando: {} enla tienda {} ", link.getProduct().getName(), link.getStoreName());
 
-            Optional<SiteSnapshot> lastSnapshot = snapshotRepository.findFirstByMonitoredSiteIdOrderBySnapshotTimeDesc(site.getId());
+            ScraperData scraperData = scraperService.getLastestData(link);
 
-            if (lastSnapshot.isPresent()) {
-                String previousValue = lastSnapshot.get().getCapturedValue();
+            if (scraperData != null){
+                ProductUpdateEvent event = ProductUpdateEvent.builder()
+                        .productId(link.getProduct().getId())
+                        .linkId(link.getId())
+                        .storeName(link.getStoreName())
+                        .currentPrice(scraperData.getPrice())
+                        .installments(scraperData.getInstallments())
+                        .hasFreeShipping(scraperData.getHasFreeShipping)
+                        .timestamp(LocalDateTime.now())
+                        .build();
 
-                if (!currentValue.equals(previousValue)) {
-                    log.warn("ALERTA DE CAMBIO DETECTADA");
-                 ProductUpdateEvent event = ProductUpdateEvent.builder()
-                         .siteId(site.getId())
-                         .siteName(site.getName())
-                         .oldValue(previousValue)
-                         .newValue(currentValue)
-                         .timestamp(java.time.LocalDateTime.now())
-                         .build();
+                rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, event);
 
-                 rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE,
-                         RabbitConfig.ROUTING_KEY, event);
-                 log.info("Evento enviado a RabbitMQ correctamente.");
-
-                 telegramService.sendMeTelegramAlert(site.getName(), previousValue, currentValue);
-
-                 site.setLastCheckedAt(LocalDateTime.now());
-                 siteRepository.save(site);
-                }
+                log.info("Datos enviados a la cola para: {} - ${} ", link.getStoreName(), scraperData.getPrice());
             }
 
-            SiteSnapshot snapshot = SiteSnapshot.builder()
-                    .product(site)
-                    .capturedValue(currentValue)
-                    .snapshotTime(java.time.LocalDateTime.now())
-                    .build();
 
-            snapshotRepository.save(snapshot);
-            log.info("Valor guardado {}", currentValue);
 
-        } catch (Exception e) { // <-- ESTO FALTABA
-            log.error("Error procesando el sitio {}: {}", site.getName(), e.getMessage());
+        } catch (Exception e){
+            log.error("Error procesando el link {}: {} ", link.getUrl(), e.getMessage());
         }
     }
 }
