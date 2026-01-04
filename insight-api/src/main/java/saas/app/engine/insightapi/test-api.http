@@ -32,6 +32,22 @@ Content-Type: application/json
   "checkIntervalMinutes": 5
 }
 
+### Preuba de sitio web creado con link suministrado por nosotros
+POST http://localhost:8080/api/products/with-link
+Content-Type: application/json
+
+{
+  "name": "Zapatilla Urbana Blanca",
+  "brand": "Adidas",
+  "category": "Calzado",
+  "gender": "Unisex",
+  "storeName": "Tienda Oficial Adidas",
+  "url": "https://www.dexter.com.ar/zapatillas-adidas-court-hombre/ADIE0927_11.5_1.html",
+  "priceSelector": ".price-active",
+  "installmentsSelector": ".installments-info",
+  "freeShippingThreshold": 0,
+  "isActive": true
+}
 
 
 

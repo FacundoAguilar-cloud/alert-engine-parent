@@ -1,5 +1,6 @@
 package saas.app.core.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,5 +39,6 @@ public class ProductLink {
 
     @ManyToOne
     @JoinColumn(name = "productId")
+    @JsonIgnore //cambiar si es contraproducente
     private Product product;
 }

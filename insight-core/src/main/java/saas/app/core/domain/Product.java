@@ -33,6 +33,10 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List <ProductLink> links;
 
+    private Boolean isActive;
+
+    private LocalDateTime createdAt;
+
     //agregar luego un dato que contenga una imagen de referencia para el catalogo de cierto producto
 
 }
