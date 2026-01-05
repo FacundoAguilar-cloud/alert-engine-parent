@@ -85,7 +85,7 @@ public class ProductController {
         link.setStoreName(request.getStoreName());
         link.setUrl(request.getUrl());
         link.setPriceSelector(request.getPriceSelector());
-        link.setInstallmnetsSelector(request.getInstallmentsSelector());
+        link.setInstallmentsSelector(request.getInstallmentsSelector());
         link.setFreeShippingThreshold(request.getFreeShippingThreshold());
         link.setLastStockChecked(LocalDateTime.now());
 

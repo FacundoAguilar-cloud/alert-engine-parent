@@ -45,7 +45,7 @@ Content-Type: application/json
   "url": "https://www.dexter.com.ar/zapatillas-adidas-court-hombre/ADIE0927_11.5_1.html",
   "priceSelector": ".price-active",
   "installmentsSelector": ".installments-info",
-  "freeShippingThreshold": 0,
+  "freeShippingThreshold": 0.0,
   "isActive": true
 }
 
