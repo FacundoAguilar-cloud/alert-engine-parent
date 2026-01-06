@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 public class ScraperData {
     private BigDecimal price;
     private Integer installments;
-    private Boolean offersFreeShipping;
+    private Boolean hasFreeShipping;
     private Double  freeShippingAmount;
     private String stockStatus;
 

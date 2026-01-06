@@ -88,7 +88,7 @@ public class ScraperService {
             return ScraperData.builder()
                     .price(extractedPrice)
                     .installments(installments)
-                    .offersFreeShipping(isFree)
+                    .hasFreeShipping(isFree)
                     .build();
 
         } catch (Exception e) {

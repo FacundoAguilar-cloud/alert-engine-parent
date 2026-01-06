@@ -21,7 +21,7 @@ public class ProductUpdateConsumer {
     private final TelegramNotificationService telegramService;
 
 
-    @RabbitListener(queues = "q.site.alerts")
+    @RabbitListener(queues = "q.site.alerts", containerFactory = "rabbitListenerContainerFactory")
     @Transactional
     public void receiveMessage(ProductUpdateEvent event){
         log.info(" Procesando actualización para el producto : {} en la tienda: {}.", event.getProductId(), event.getStoreName());

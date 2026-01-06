@@ -56,7 +56,7 @@ public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recole
                         .storeName(link.getStoreName())
                         .currentPrice(scraperData.getPrice())
                         .installments(scraperData.getInstallments())
-                        .hasFreeShipping(scraperData.getOffersFreeShipping())
+                        .hasFreeShipping(scraperData.getHasFreeShipping())
                         .timestamp(LocalDateTime.now())
                         .build();
 

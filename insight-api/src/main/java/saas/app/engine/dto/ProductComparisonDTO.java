@@ -22,7 +22,7 @@ public class ProductComparisonDTO {
     private String storeName;
     private BigDecimal price;
     private Integer installments;
-    private Boolean freeShipping;
+    private Boolean hasFreeShipping;
     private String url;
     private LocalDateTime lastUpdated;
     }

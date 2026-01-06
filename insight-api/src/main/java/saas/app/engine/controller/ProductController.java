@@ -44,7 +44,7 @@ public class ProductController {
                 .storeName(link.getStoreName())
                 .price(link.getCurrentPrice())
                 .installments(link.getMaxInstallments())
-                .freeShipping(link.getHasFreeShipping())
+                .hasFreeShipping(link.getHasFreeShipping())
                 .url(link.getUrl())
                 .lastUpdated(link.getLastStockChecked())
                 .build()
