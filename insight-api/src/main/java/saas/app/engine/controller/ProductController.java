@@ -46,7 +46,7 @@ public class ProductController {
                 .installments(link.getMaxInstallments())
                 .hasFreeShipping(link.getHasFreeShipping())
                 .url(link.getUrl())
-                .lastUpdated(link.getLastStockChecked())
+                .lastChecked(link.getLastChecked())
                 .build()
                 ).toList();
 
@@ -87,7 +87,7 @@ public class ProductController {
         link.setPriceSelector(request.getPriceSelector());
         link.setInstallmentsSelector(request.getInstallmentsSelector());
         link.setFreeShippingThreshold(request.getFreeShippingThreshold());
-        link.setLastStockChecked(LocalDateTime.now());
+        link.setLastChecked(LocalDateTime.now());
 
         linkRepository.save(link);
 

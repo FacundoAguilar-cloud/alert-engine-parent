@@ -24,6 +24,6 @@ public class ProductComparisonDTO {
     private Integer installments;
     private Boolean hasFreeShipping;
     private String url;
-    private LocalDateTime lastUpdated;
+    private LocalDateTime lastChecked;
     }
 }

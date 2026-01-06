@@ -41,14 +41,15 @@ public class ProductUpdateConsumer {
         link.setCurrentPrice(event.getCurrentPrice());
         link.setMaxInstallments(event.getInstallments());
         link.setHasFreeShipping(event.getHasFreeShipping());
-        link.setLastStockChecked(event.getTimestamp());
+        link.setLastChecked(event.getLastChecked());
+        link.setIsAvailable(event.getIsAvailable());
 
         linkRepository.save(link);
 
         PriceHistory history = PriceHistory.builder()
                 .productLink(link)
                 .price(event.getCurrentPrice())
-                .detectedAt(event.getTimestamp())
+                .detectedAt(event.getLastChecked())
                 .build();
             historyRepository.save(history);
 

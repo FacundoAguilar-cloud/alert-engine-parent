@@ -11,7 +11,7 @@ public class ScraperData {
     private BigDecimal price;
     private Integer installments;
     private Boolean hasFreeShipping;
-    private Double  freeShippingAmount;
-    private String stockStatus;
+    private Boolean isAvailable;
+    //private BigDecimal  freeShippingThreshold;
 
 }

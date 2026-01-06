@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 public class ProductUpdateEvent implements Serializable { //por un tema de seguridad usamos este DTO y no la entidad, ademas de temas de peso y acoplamiento
     private Long productId;
     private Long linkId;
-
     private String storeName;
 
     private BigDecimal currentPrice;
@@ -25,6 +24,6 @@ public class ProductUpdateEvent implements Serializable { //por un tema de segur
     private Boolean hasFreeShipping;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime timestamp;
+    private LocalDateTime lastChecked;
     private Boolean isAvailable;
 }

@@ -23,19 +23,16 @@ public class ProductLink {
 
     private String storeName;
     private String url;
-
     private String priceSelector;
     private String  installmentsSelector; //va a buscar lo de las cuotas basicamente
 
-    private Integer maxInstallments; //cantidad de cuotas maximas
-
     private BigDecimal currentPrice;
-
+    private Integer maxInstallments; //cantidad de cuotas maximas
     private Boolean hasFreeShipping;
-
     private BigDecimal freeShippingThreshold;
 
-    private LocalDateTime lastStockChecked;
+    private LocalDateTime lastChecked;
+    private Boolean isAvailable;
 
     @ManyToOne
     @JoinColumn(name = "productId")

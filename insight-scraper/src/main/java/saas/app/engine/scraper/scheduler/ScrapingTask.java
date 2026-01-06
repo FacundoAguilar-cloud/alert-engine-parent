@@ -57,7 +57,8 @@ public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recole
                         .currentPrice(scraperData.getPrice())
                         .installments(scraperData.getInstallments())
                         .hasFreeShipping(scraperData.getHasFreeShipping())
-                        .timestamp(LocalDateTime.now())
+                        .isAvailable(scraperData.getIsAvailable())
+                        .lastChecked(LocalDateTime.now())
                         .build();
 
                 rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, event);
