@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductUpdateEvent implements Serializable { //por un tema de seguridad usamos este DTO y no la entidad, ademas de temas de peso y acoplamiento
     private Long productId;
     private Long linkId;
@@ -25,5 +25,6 @@ public class ProductUpdateEvent implements Serializable { //por un tema de segur
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime lastChecked;
+
     private Boolean isAvailable;
 }

@@ -1,4 +1,4 @@
-package saas.app.engine.scraper.config;
+package saas.app.core.config;
 
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -8,17 +8,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
-import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.amqp.core.Queue;
-import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 
 
 @Configuration
@@ -44,20 +40,16 @@ public class RabbitConfig  {
 
 
 
-    @Bean
-    public ObjectMapper objectMapper(){
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return mapper;
-    }
 
     @Bean
     public Jackson2JsonMessageConverter messageConverter(){
-        Jackson2JsonMessageConverter converter = new  Jackson2JsonMessageConverter(objectMapper());
-        converter.setAlwaysConvertToInferredType(true);
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.registerModule(new JavaTimeModule());
+      mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+      Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(mapper);
+      converter.setAlwaysConvertToInferredType(true);
         return converter;
 
     }

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import saas.app.core.domain.ProductLink;
 import saas.app.core.dto.ProductUpdateEvent;
 import saas.app.core.repository.ProductLinkRepository;
-import saas.app.engine.scraper.config.RabbitConfig;
+import saas.app.core.config.RabbitConfig;
 import saas.app.engine.scraper.dto.ScraperData;
 import saas.app.engine.scraper.service.ScraperService;
 

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import saas.app.core.config.RabbitConfig;
 import saas.app.core.domain.ProductLink;
 import saas.app.core.domain.PriceHistory;
 import saas.app.core.dto.ProductUpdateEvent;
@@ -21,7 +22,7 @@ public class ProductUpdateConsumer {
     private final TelegramNotificationService telegramService;
 
 
-    @RabbitListener(queues = "q.site.alerts", containerFactory = "rabbitListenerContainerFactory")
+    @RabbitListener(queues = RabbitConfig.QUEUE_ALERTS, containerFactory = "rabbitListenerContainerFactory")
     @Transactional
     public void receiveMessage(ProductUpdateEvent event){
         log.info(" Procesando actualización para el producto : {} en la tienda: {}.", event.getProductId(), event.getStoreName());
