@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 import saas.app.core.domain.ProductLink;
 import saas.app.core.dto.ProductUpdateEvent;
+import saas.app.core.enums.StorePlataform;
 import saas.app.engine.scraper.dto.ScraperData;
 import saas.app.engine.scraper.util.PriceParser;
 
@@ -19,84 +20,6 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class ScraperService {
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-
-    public ScraperData getLastestData(ProductLink link) {
-        try {
-            Document doc = Jsoup.connect(link.getUrl())
-                    .userAgent(USER_AGENT)
-                    .timeout(10000)
-                    .get();
-
-            log.info("Título de página capturada: {}", doc.title());
-
-            // intenta extraer el precio-
-            BigDecimal extractedPrice = null;
-
-            // Estrategia robusta para páginas grandes-
-            Element scriptElement = doc.selectFirst("script[type=\"application/ld+json\"]");
-            if (scriptElement != null) {
-                String jsonContent = scriptElement.html();
-                String priceVal = findValueInJson(jsonContent, "\"price\":");
-                if (priceVal != null) {
-                    extractedPrice = new BigDecimal(priceVal);
-                    log.info("Precio hallado vía JSON-LD: {}", extractedPrice);
-                }
-            }
-
-            // Otra estrategia por si la primera falla
-            if (extractedPrice == null) {
-                Element metaPrice = doc.selectFirst("meta[property=\"product:price:amount\"]");
-                if (metaPrice != null) {
-                    extractedPrice = PriceParser.parse(metaPrice.attr("content"));
-                    log.info("Precio hallado vía Meta Tag: {}", extractedPrice);
-                }
-            }
-
-            // Selector tradicional
-            if (extractedPrice == null && link.getPriceSelector() != null) {
-                Element priceElement = doc.selectFirst(link.getPriceSelector());
-                if (priceElement != null) {
-                    extractedPrice = PriceParser.parse(priceElement.text());
-                    log.info("Precio hallado vía Selector CSS: {}", extractedPrice);
-                }
-            }
-
-            // Si no hay precio, salimos
-            if (extractedPrice == null) {
-                log.error("No se encontró el precio en ninguna de las fuentes para: {}", link.getUrl());
-                return null;
-            }
-
-            // Extracción de cuotas
-            Integer installments = 1;
-            if (link.getInstallmentsSelector() != null && !link.getInstallmentsSelector().isEmpty()) {
-                Element instElement = doc.selectFirst(link.getInstallmentsSelector());
-                if (instElement != null) {
-                    installments = parseInstallments(instElement.text());
-                }
-            }
-
-            // Lógica para el envio gratis.
-            boolean isFree = false;
-            if (Boolean.TRUE.equals(link.getHasFreeShipping())) {
-                isFree = true;
-            } else if (link.getFreeShippingThreshold() != null) {
-                isFree = extractedPrice.compareTo(link.getFreeShippingThreshold()) >= 0;
-            }
-
-            // Retornamos la data
-            return ScraperData.builder()
-                    .price(extractedPrice)
-                    .installments(installments)
-                    .hasFreeShipping(isFree)
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error de conexión o procesamiento con la URL {}: {}", link.getUrl(), e.getMessage());
-            return null;
-        }
-    }
-
     private Integer parseInstallments(String text) {
         try {
             String numberOnly = text.replaceAll("[^0-9]", "");
@@ -124,4 +47,67 @@ public class ScraperService {
             return null;
         }
     }
+
+    private StorePlataform detectPlataform(Document doc){
+        String html = doc.html().toLowerCase();
+
+        if (html.contains("vtex") || html.contains("vtex-io")) {
+            return StorePlataform.VTEX;
+        }
+        if (html.contains("tiendanube") || html.contains("nuvemshop")){
+            return StorePlataform.TIENDANUBE;
+        }
+
+        if (html.contains("shopify")){
+            return  StorePlataform.SHOPIFY;
+        }
+
+        return StorePlataform.GENERIC;
+    }
+    public ScraperData getLastestData(ProductLink link) {
+        try {
+            Document doc = Jsoup.connect(link.getUrl())
+                    .userAgent(USER_AGENT)
+                    .timeout(10000)
+                    .get();
+
+            StorePlataform plataform = detectPlataform(doc);
+            log.info("Plataforma detectada: {} para la URL: {}", plataform, link.getUrl());
+
+            // intenta extraer el precio-
+            BigDecimal price = null;
+
+            switch (plataform){
+                case VTEX:
+                    price = extractPriceViaJsonLD(doc); //estos son los metodos que tenemos que crear
+                    break;
+                case TIENDANUBE:
+                    price = extractPriceViaMeta(doc, "product:price:amount");
+                    break;
+                case GENERIC:
+                default:
+                    price = extractPriceViaSelector(doc, link.getPriceSelector());
+                    break;
+            }
+
+            if (price == null){
+                log.error("No se pudo extraer el precio de ninguna forma para {}",plataform);
+                return null;
+            }
+
+            return ScraperData.builder()
+                    .price(price)
+                    .installments(1)
+                    .hasFreeShipping(false)
+                    .build();
+
+
+    } catch (Exception e){
+            log.error("Error scrapeando {}", e.getMessage());
+            return null;
+        }
+
+
+}
+
 }
