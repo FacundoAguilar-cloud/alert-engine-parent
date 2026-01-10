@@ -20,33 +20,7 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class ScraperService {
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-    private Integer parseInstallments(String text) {
-        try {
-            String numberOnly = text.replaceAll("[^0-9]", "");
-            return numberOnly.isEmpty() ? 1 : Integer.parseInt(numberOnly);
-        } catch (Exception e) {
-            return 1;
-        }
-    }
 
-    private String findValueInJson(String json, String key) {
-        if (!json.contains(key)) return null;
-        try {
-            int start = json.indexOf(key) + key.length();
-            // Buscamos el final del valor (puede ser una coma, una llave o un corchete)
-            int end = json.length();
-            for (int i = start; i < json.length(); i++) {
-                char c = json.charAt(i);
-                if (c == ',' || c == '}' || c == ']') {
-                    end = i;
-                    break;
-                }
-            }
-            return json.substring(start, end).replace("\"", "").trim();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     private StorePlataform detectPlataform(Document doc){
         String html = doc.html().toLowerCase();

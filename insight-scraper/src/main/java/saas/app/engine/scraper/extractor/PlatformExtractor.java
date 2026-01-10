@@ -1,13 +1,15 @@
 package saas.app.engine.scraper.extractor;
 
 import org.jsoup.nodes.Document;
+import saas.app.core.domain.ProductLink;
 import saas.app.core.enums.StorePlataform;
+import saas.app.engine.scraper.dto.ExtractorResult;
 
 import java.math.BigDecimal;
 
 public interface PlatformExtractor {
 
-    boolean supports(StorePlataform plataform);
+    boolean supports(StorePlataform platform);
 
-    BigDecimal extractPrice (Document doc);
+    ExtractorResult extract (Document doc, ProductLink link);
 }
