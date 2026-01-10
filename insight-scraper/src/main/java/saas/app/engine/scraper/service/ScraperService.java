@@ -1,87 +1,101 @@
 package saas.app.engine.scraper.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 import saas.app.core.domain.ProductLink;
-import saas.app.core.dto.ProductUpdateEvent;
-import saas.app.core.enums.StorePlataform;
+import saas.app.core.enums.StorePlatform;
+import saas.app.engine.scraper.dto.ExtractorResult;
 import saas.app.engine.scraper.dto.ScraperData;
-import saas.app.engine.scraper.util.PriceParser;
+import saas.app.engine.scraper.extractor.PlatformExtractor;
 
-import java.awt.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ScraperService {
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+    private  final List <PlatformExtractor> extractors;
 
-    private StorePlataform detectPlataform(Document doc){
-        String html = doc.html().toLowerCase();
-
-        if (html.contains("vtex") || html.contains("vtex-io")) {
-            return StorePlataform.VTEX;
-        }
-        if (html.contains("tiendanube") || html.contains("nuvemshop")){
-            return StorePlataform.TIENDANUBE;
-        }
-
-        if (html.contains("shopify")){
-            return  StorePlataform.SHOPIFY;
-        }
-
-        return StorePlataform.GENERIC;
-    }
     public ScraperData getLastestData(ProductLink link) {
         try {
             Document doc = Jsoup.connect(link.getUrl())
                     .userAgent(USER_AGENT)
-                    .timeout(10000)
+                    .timeout(15000)
                     .get();
 
-            StorePlataform plataform = detectPlataform(doc);
-            log.info("Plataforma detectada: {} para la URL: {}", plataform, link.getUrl());
+            // detectamos la plataforma
+            StorePlatform platform = detectPlatform(doc);
+            log.info("Analizando tienda {} con estrategia: {}", link.getStoreName(), platform);
 
-            // intenta extraer el precio-
-            BigDecimal price = null;
+            // Buscar la plataforma
+            PlatformExtractor extractor = findExtractor(platform);
 
-            switch (plataform){
-                case VTEX:
-                    price = extractPriceViaJsonLD(doc); //estos son los metodos que tenemos que crear
-                    break;
-                case TIENDANUBE:
-                    price = extractPriceViaMeta(doc, "product:price:amount");
-                    break;
-                case GENERIC:
-                default:
-                    price = extractPriceViaSelector(doc, link.getPriceSelector());
-                    break;
-            }
+            //  Ejecutar extracción
+            ExtractorResult result = extractor.extract(doc, link);
 
-            if (price == null){
-                log.error("No se pudo extraer el precio de ninguna forma para {}",plataform);
+            if (result == null || result.getPrice() == null){
+                log.error("El extractor {} no pudo obtener los datos de {}", platform, link.getUrl());
                 return null;
             }
 
+            boolean freeShipping = calculateFreeShipping(result.getPrice(), link);
+
             return ScraperData.builder()
-                    .price(price)
-                    .installments(1)
-                    .hasFreeShipping(false)
+                    .price(result.getPrice())
+                    .installments(result.getInstallments())
+                    .hasFreeShipping(freeShipping)
                     .build();
-
-
-    } catch (Exception e){
-            log.error("Error scrapeando {}", e.getMessage());
+        }catch (Exception e){
+            log.error("Error crítico en el Scraper para {}: {} ", link.getUrl(), e.getMessage());
             return null;
         }
 
 
 }
+
+    private StorePlatform detectPlatform(Document doc){
+        String html = doc.html().toLowerCase();
+
+        if (html.contains("vtex") || html.contains("vtex-io")) {
+            return StorePlatform.VTEX;
+        }
+        if (html.contains("tiendanube") || html.contains("nuvemshop")){
+            return StorePlatform.TIENDANUBE;
+        }
+
+        if (html.contains("shopify")){
+            return  StorePlatform.SHOPIFY;
+        }
+
+        return StorePlatform.GENERIC;
+    }
+
+    private PlatformExtractor findExtractor(StorePlatform platform){
+        return extractors.stream().filter(e -> e.supports(platform)
+                ).findFirst().orElseGet(()-> {log.warn("No se encontró extractor específico para {}, usando genérico", platform);
+            return extractors.stream().filter( e -> e.supports(StorePlatform.GENERIC)).findFirst()
+                    .orElseThrow(()-> new RuntimeException("No hay extractores configurados"));
+
+    });
+
+}
+
+    private boolean calculateFreeShipping(BigDecimal price, ProductLink link){
+        if (Boolean.TRUE.equals(link.getHasFreeShipping())){
+            return true;
+        }
+
+        if (link.getFreeShippingThreshold() !=null){
+            return price.compareTo(link.getFreeShippingThreshold())  >= 0;
+        }
+        return false;
+    }
+
 
 }

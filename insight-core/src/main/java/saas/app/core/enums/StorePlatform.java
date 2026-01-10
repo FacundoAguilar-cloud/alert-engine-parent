@@ -1,5 +1,5 @@
 package saas.app.core.enums;
 
-public enum StorePlataform {
+public enum StorePlatform {
     VTEX, TIENDANUBE, SHOPIFY, GENERIC
 }

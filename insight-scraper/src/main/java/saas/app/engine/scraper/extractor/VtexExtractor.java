@@ -1,11 +1,10 @@
 package saas.app.engine.scraper.extractor;
 
-import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 import saas.app.core.domain.ProductLink;
-import saas.app.core.enums.StorePlataform;
+import saas.app.core.enums.StorePlatform;
 import saas.app.engine.scraper.dto.ExtractorResult;
 import saas.app.engine.scraper.util.PriceParser;
 import saas.app.engine.scraper.util.ScraperUtils;
@@ -14,8 +13,8 @@ import java.math.BigDecimal;
 @Component
 public class VtexExtractor implements PlatformExtractor{
     @Override
-    public boolean supports(StorePlataform platform) {
-        return platform == StorePlataform.VTEX;
+    public boolean supports(StorePlatform platform) {
+        return platform == StorePlatform.VTEX;
     }
 
 
