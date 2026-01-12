@@ -1,5 +1,8 @@
 package saas.app.engine.scraper.util;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 public class ScraperUtils {
 
     public static Integer parseInstallments(String text) { //este metodo lo movemos del ScraperService y lo traemos para aca
@@ -28,5 +31,22 @@ public class ScraperUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static String extractImageUrl(Document doc){
+        Element metaImage = doc.selectFirst("meta[property=\"og:image\"]");
+
+        if (metaImage != null){
+            return metaImage.attr("content");
+        }
+
+        Element twitterImage = doc.selectFirst("meta[name=\"twitter:image\"]");
+
+        if (twitterImage != null){
+            return  twitterImage.attr("content");
+        }
+
+        return null;
+
     }
 }

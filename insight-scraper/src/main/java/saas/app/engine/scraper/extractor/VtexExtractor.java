@@ -49,10 +49,16 @@ public class VtexExtractor implements PlatformExtractor{
                 inst = ScraperUtils.parseInstallments(el.text());
             }
         }
+
+        String img = ScraperUtils.extractImageUrl(doc);
+
+
+
         return  ExtractorResult
                 .builder()
                 .price(price)
                 .installments(inst)
+                .imageUrl(img)
                 .isAvailable(true)
                 .build();
     }

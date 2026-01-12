@@ -6,6 +6,7 @@ import saas.app.core.domain.ProductLink;
 import saas.app.core.enums.StorePlatform;
 import saas.app.engine.scraper.dto.ExtractorResult;
 import saas.app.engine.scraper.util.PriceParser;
+import saas.app.engine.scraper.util.ScraperUtils;
 
 import java.math.BigDecimal;
 
@@ -30,9 +31,14 @@ public class TiendaNubeExtractor implements PlatformExtractor {
 
             if (el != null) price = PriceParser.parse(el.text());
         }
+
+        String img = ScraperUtils.extractImageUrl(doc);
+
+
         return ExtractorResult.builder()
                 .price(price)
                 .installments(1) //tiendanube requiere un selector manual para las cuotas, por eso lo dejamos asi tal cual
+                .imageUrl(img)
                 .build();
     }
 }

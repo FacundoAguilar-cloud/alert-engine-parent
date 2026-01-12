@@ -18,6 +18,7 @@ public class ProductUpdateEvent implements Serializable { //por un tema de segur
     private Long productId;
     private Long linkId;
     private String storeName;
+    private String imageUrl;
 
     private BigDecimal currentPrice;
     private Integer installments;

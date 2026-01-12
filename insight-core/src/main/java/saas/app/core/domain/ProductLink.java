@@ -25,6 +25,7 @@ public class ProductLink {
     private String url;
     private String priceSelector;
     private String  installmentsSelector; //va a buscar lo de las cuotas basicamente
+    private String imageUrl;
 
     private BigDecimal currentPrice;
     private Integer maxInstallments; //cantidad de cuotas maximas

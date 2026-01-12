@@ -11,4 +11,5 @@ public class ExtractorResult {
  private BigDecimal price;
  private Integer installments;
  private Boolean isAvailable;
+ private String imageUrl;
 }

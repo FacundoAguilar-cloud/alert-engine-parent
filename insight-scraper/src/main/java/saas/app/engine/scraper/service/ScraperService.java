@@ -62,7 +62,10 @@ public class ScraperService {
     private StorePlatform detectPlatform(Document doc){
         String html = doc.html().toLowerCase();
 
-        if (html.contains("vtex") || html.contains("vtex-io")) {
+        if (html.contains("vtex") ||
+                html.contains("vtex-io") ||
+                html.contains("vtex-apps-framework") ||
+                 html.contains("vteximg")) {
             return StorePlatform.VTEX;
         }
         if (html.contains("tiendanube") || html.contains("nuvemshop")){
