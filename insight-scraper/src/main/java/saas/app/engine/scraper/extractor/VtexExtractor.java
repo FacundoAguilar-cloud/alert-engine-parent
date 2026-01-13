@@ -1,5 +1,6 @@
 package saas.app.engine.scraper.extractor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import saas.app.engine.scraper.util.ScraperUtils;
 
 import java.math.BigDecimal;
 @Component
+@Slf4j
 public class VtexExtractor implements PlatformExtractor{
     @Override
     public boolean supports(StorePlatform platform) {
@@ -22,6 +24,8 @@ public class VtexExtractor implements PlatformExtractor{
     public ExtractorResult extract(Document doc, ProductLink link) {
         Element scriptElement = doc.selectFirst("script[type=\"application/ld+json\"]");
         BigDecimal price = null;
+        String img = null;
+
 
         if (scriptElement != null){
             String jsonContent = scriptElement.html();
@@ -31,6 +35,15 @@ public class VtexExtractor implements PlatformExtractor{
             if (priceVal != null){
                 price = new BigDecimal(priceVal);
             }
+
+            img = ScraperUtils.findValueInJson(jsonContent, "\"image\":");
+            log.info("Imagen hallada via JSON-LD: {}", img);
+
+
+        }
+
+        if (img == null || img.isEmpty()){
+            img = ScraperUtils.extractImageUrl(doc);
         }
 
         if (price == null){
@@ -50,7 +63,6 @@ public class VtexExtractor implements PlatformExtractor{
             }
         }
 
-        String img = ScraperUtils.extractImageUrl(doc);
 
 
 

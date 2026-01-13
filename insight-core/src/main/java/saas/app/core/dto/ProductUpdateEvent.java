@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -28,4 +29,5 @@ public class ProductUpdateEvent implements Serializable { //por un tema de segur
     private LocalDateTime lastChecked;
 
     private Boolean isAvailable;
+    private List <SizeStockDTO> sizes;
 }

@@ -59,6 +59,7 @@ public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recole
                         .hasFreeShipping(scraperData.getHasFreeShipping())
                         .isAvailable(scraperData.getIsAvailable())
                         .lastChecked(LocalDateTime.now())
+                        .imageUrl(scraperData.getImageUrl())
                         .build();
 
                 rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, event);

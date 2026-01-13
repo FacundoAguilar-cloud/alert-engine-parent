@@ -34,19 +34,29 @@ public class ScraperUtils {
     }
 
     public static String extractImageUrl(Document doc){
-        Element metaImage = doc.selectFirst("meta[property=\"og:image\"]");
+        Element metaOgImage = doc.selectFirst("meta[property='og:image']");
 
-        if (metaImage != null){
-            return metaImage.attr("content");
-        }
+        if (metaOgImage != null) return cleanImageUrl(metaOgImage.attr("content"));
 
-        Element twitterImage = doc.selectFirst("meta[name=\"twitter:image\"]");
 
-        if (twitterImage != null){
-            return  twitterImage.attr("content");
-        }
+        Element metaTwitterImage = doc.selectFirst("meta[name='twitter:image']");
+
+        if (metaTwitterImage != null) return cleanImageUrl(metaTwitterImage.attr("content"));
+
+
+
+        Element metaSchemaImage = doc.selectFirst("meta[itemprop='image']");
+        if (metaSchemaImage != null) return cleanImageUrl(metaSchemaImage.attr("content"));
 
         return null;
 
+    }
+
+    private static String cleanImageUrl(String url){
+        if (url == null) return null;
+
+        if (url.startsWith("//")) return "https:"  + url;
+
+        return url;
     }
 }

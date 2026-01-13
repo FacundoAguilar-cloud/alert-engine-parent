@@ -30,7 +30,7 @@ public class ScraperService {
                     .get();
 
             // detectamos la plataforma
-            StorePlatform platform = detectPlatform(doc);
+            StorePlatform platform = detectPlatform(doc,link.getUrl());
             log.info("Analizando tienda {} con estrategia: {}", link.getStoreName(), platform);
 
             // Buscar la plataforma
@@ -59,8 +59,9 @@ public class ScraperService {
 
 }
 
-    private StorePlatform detectPlatform(Document doc){
+    private StorePlatform detectPlatform(Document doc, String url){
         String html = doc.html().toLowerCase();
+        String urlLower = url.toLowerCase();
 
         if (html.contains("vtex") ||
                 html.contains("vtex-io") ||
@@ -68,7 +69,13 @@ public class ScraperService {
                  html.contains("vteximg")) {
             return StorePlatform.VTEX;
         }
-        if (html.contains("tiendanube") || html.contains("nuvemshop")){
+
+        if (url.contains("dexter.com.ar") || url.contains("adidas.com.ar")){
+            return StorePlatform.VTEX;
+        }
+
+
+        if (html.contains("tiendanube") || html.contains("nuvemshop") || urlLower.contains("tiendanube.com"))  {
             return StorePlatform.TIENDANUBE;
         }
 
