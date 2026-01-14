@@ -49,6 +49,7 @@ public class ScraperService {
             return ScraperData.builder()
                     .price(result.getPrice())
                     .installments(result.getInstallments())
+                    .imageUrl(result.getImageUrl())
                     .hasFreeShipping(freeShipping)
                     .build();
         }catch (Exception e){
