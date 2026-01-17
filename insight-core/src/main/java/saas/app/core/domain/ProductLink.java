@@ -32,6 +32,9 @@ public class ProductLink {
     private Boolean hasFreeShipping;
     private BigDecimal freeShippingThreshold;
 
+    @Column(columnDefinition = "TEXT")
+    private String availableSizes;
+
     private LocalDateTime lastChecked;
     private Boolean isAvailable;
 

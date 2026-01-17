@@ -83,7 +83,19 @@ public class VtexExtractor implements PlatformExtractor{
 
             for (int i = 1 ; i < offerBlocks.length; i++){
                 String block = offerBlocks[i];
+
+                String sizeName = ScraperUtils.findValueInJson(block, "\"availability\":");
+
+                String availability = ScraperUtils.findValueInJson(block, "\"availability\":");
+
+                boolean inStock = availability != null && availability.contains("InStock");
+
+                if (sizeName  != null){
+                    sizes.add(new SizeStockDTO(sizeName.trim(), inStock));
+                }
             }
+
+
         }
 
 
@@ -92,7 +104,8 @@ public class VtexExtractor implements PlatformExtractor{
                 .price(price)
                 .installments(inst)
                 .imageUrl(img)
-                .isAvailable(true)
+                .sizes(sizes)
+                .isAvailable(!sizes.isEmpty())
                 .build();
     }
 
