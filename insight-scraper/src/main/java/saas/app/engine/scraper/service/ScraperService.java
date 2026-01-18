@@ -50,6 +50,7 @@ public class ScraperService {
                     .price(result.getPrice())
                     .installments(result.getInstallments())
                     .imageUrl(result.getImageUrl())
+                    .sizes(result.getSizes())
                     .hasFreeShipping(freeShipping)
                     .build();
         }catch (Exception e){

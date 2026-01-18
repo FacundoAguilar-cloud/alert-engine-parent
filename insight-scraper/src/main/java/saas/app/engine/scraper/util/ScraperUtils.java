@@ -2,6 +2,10 @@ package saas.app.engine.scraper.util;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import saas.app.core.dto.SizeStockDTO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ScraperUtils {
 
@@ -32,6 +36,35 @@ public class ScraperUtils {
             return null;
         }
     }
+
+
+    public static List <SizeStockDTO> parseSizesFromJsonLD(String json){
+        List <SizeStockDTO> sizes = new ArrayList<>();
+
+        if (json == null) return sizes;
+
+        String keyword = "\"@type\"";  //terminar de arreglar mañana
+        if (!json.contains(keyword)) return sizes;
+
+        String[] blocks = json.split("\"@type\"");
+
+        String[] offerBlocks = json.split("\"@type\":\"Offer\"");
+
+        for (int i = 1 ; i < offerBlocks.length; i++){
+            String block = offerBlocks[i];
+            String sizeName = ScraperUtils.findValueInJson(block, "\"name\":");
+
+            String availability = ScraperUtils.findValueInJson(block, "\"availability\":");
+
+            if (sizeName != null){
+                boolean inStock = availability != null && availability.contains("InStock");
+
+                sizes.add(new SizeStockDTO(sizeName.trim(), inStock));
+            }
+    }
+        return sizes;
+    }
+
 
     public static String extractImageUrl(Document doc){
 
@@ -66,4 +99,6 @@ public class ScraperUtils {
 
         return url;
     }
+    
+
 }

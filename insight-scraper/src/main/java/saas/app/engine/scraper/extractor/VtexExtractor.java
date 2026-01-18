@@ -29,6 +29,7 @@ public class VtexExtractor implements PlatformExtractor{
         Element scriptElement = doc.selectFirst("script[type=\"application/ld+json\"]");
         BigDecimal price = null;
         String img = null;
+        List<SizeStockDTO> sizes = new ArrayList<>();
 
 
 
@@ -42,13 +43,15 @@ public class VtexExtractor implements PlatformExtractor{
             }
 
             String rawImg = ScraperUtils.findValueInJson(jsonContent, "\"image\":");
-            if (rawImg != null){
-                img = rawImg.replace("[", "").replace("]", "").replace("\"", "").trim();
-            }
+            if (rawImg != null) img = rawImg
+                    .replace("[", "")
+                    .replace("]", "")
+                    .replace("\"", "").trim();
+
 
             log.info("Imagen hallada via JSON-LD: {}", img);
 
-
+            sizes = ScraperUtils.parseSizesFromJsonLD(jsonContent);
         }
 
         if (img == null || img.isEmpty() || img.equals("null") || img.contains("[") ){
@@ -63,41 +66,13 @@ public class VtexExtractor implements PlatformExtractor{
             }
         }
 
-
-
         Integer inst = 1;
-        if (link.getInstallmentsSelector() != null && link.getInstallmentsSelector().isEmpty()){
+        if (link.getInstallmentsSelector() != null && !link.getInstallmentsSelector().isEmpty()){
             Element el = doc.selectFirst(link.getInstallmentsSelector());
             if (el != null){
                 inst = ScraperUtils.parseInstallments(el.text());
             }
         }
-
-        List <SizeStockDTO> sizes = new ArrayList<>(); //seguir despues, esto va a ser para los talles
-        Element sizeElement = doc.selectFirst("script[type=\"application/ld+json\"]");
-
-        if (sizeElement != null){
-            String json = sizeElement.html();
-
-            String[] offerBlocks = json.split("\"@type\":\"Offer\"");
-
-            for (int i = 1 ; i < offerBlocks.length; i++){
-                String block = offerBlocks[i];
-
-                String sizeName = ScraperUtils.findValueInJson(block, "\"availability\":");
-
-                String availability = ScraperUtils.findValueInJson(block, "\"availability\":");
-
-                boolean inStock = availability != null && availability.contains("InStock");
-
-                if (sizeName  != null){
-                    sizes.add(new SizeStockDTO(sizeName.trim(), inStock));
-                }
-            }
-
-
-        }
-
 
         return  ExtractorResult
                 .builder()
