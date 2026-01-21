@@ -26,7 +26,7 @@ public class VtexExtractor implements PlatformExtractor{
 
     @Override
     public ExtractorResult extract(Document doc, ProductLink link) {
-        Element scriptElement = doc.selectFirst("script[type=\"application/ld+json\"]");
+        Element scriptElement = doc.selectFirst("script[type='application/ld+json']");
         BigDecimal price = null;
         String img = null;
         List<SizeStockDTO> sizes = new ArrayList<>();
@@ -72,6 +72,11 @@ public class VtexExtractor implements PlatformExtractor{
             if (el != null){
                 inst = ScraperUtils.parseInstallments(el.text());
             }
+        }
+
+        log.info("Talles extraídos para {}: {}", link.getStoreName(), sizes.size()); //log para los talles antes del return
+        for(SizeStockDTO s : sizes) {
+            log.info("Talle: {} - Disponible: {}", s.getSize(), s.getAvailable());
         }
 
         return  ExtractorResult

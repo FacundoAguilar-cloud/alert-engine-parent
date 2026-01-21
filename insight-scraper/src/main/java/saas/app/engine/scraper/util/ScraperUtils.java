@@ -47,21 +47,18 @@ public class ScraperUtils {
         if (!json.contains(keyword)) return sizes;
 
         String[] blocks = json.split("\"@type\"");
+        for (String block : blocks){
+            if (block.contains("\"Offer\"") || block.contains("Offer")){
+                String name = findValueInJson(block, "\"name\":");
+                String availability = findValueInJson(block, "\"availability\":");
 
-        String[] offerBlocks = json.split("\"@type\":\"Offer\"");
-
-        for (int i = 1 ; i < offerBlocks.length; i++){
-            String block = offerBlocks[i];
-            String sizeName = ScraperUtils.findValueInJson(block, "\"name\":");
-
-            String availability = ScraperUtils.findValueInJson(block, "\"availability\":");
-
-            if (sizeName != null){
-                boolean inStock = availability != null && availability.contains("InStock");
-
-                sizes.add(new SizeStockDTO(sizeName.trim(), inStock));
+                if (name != null && !name.isEmpty()){
+                    boolean inStock = availability != null && availability.contains("InStock");
+                    sizes.add(new SizeStockDTO(name.trim(), inStock));
+                }
             }
-    }
+
+        }
         return sizes;
     }
 
@@ -102,3 +99,4 @@ public class ScraperUtils {
     
 
 }
+
