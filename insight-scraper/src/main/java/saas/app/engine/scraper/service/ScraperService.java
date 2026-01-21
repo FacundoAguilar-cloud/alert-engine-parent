@@ -26,7 +26,7 @@ public class ScraperService {
         try {
             Document doc = Jsoup.connect(link.getUrl())
                     .userAgent(USER_AGENT)
-                    .timeout(15000)
+                    .timeout(20000)
                     .get();
 
             // detectamos la plataforma

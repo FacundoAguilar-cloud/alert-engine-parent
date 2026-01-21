@@ -3,6 +3,7 @@ package saas.app.engine.scraper.extractor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import saas.app.core.domain.ProductLink;
 import saas.app.core.dto.SizeStockDTO;
@@ -26,39 +27,32 @@ public class VtexExtractor implements PlatformExtractor{
 
     @Override
     public ExtractorResult extract(Document doc, ProductLink link) {
-        Element scriptElement = doc.selectFirst("script[type='application/ld+json']");
+        Elements scripts = doc.select("script[type='application/ld+json']");
         BigDecimal price = null;
         String img = null;
         List<SizeStockDTO> sizes = new ArrayList<>();
 
+        log.info("Bloques JSON-LD encontrados: {}", scripts.size());
 
+        for (Element script : scripts){
+            String json = script.html();
 
-        if (scriptElement != null){
-            String jsonContent = scriptElement.html();
+            if (json.contains("\"@type\":\"Product\"")){
+                sizes = ScraperUtils.parseSizesFromJsonLD(json);
 
-            String priceVal = ScraperUtils.findValueInJson(jsonContent, "\"price\":");
+                if (!sizes.isEmpty()){
+                    log.info("¡Talles capturados con Jackson!: {}", sizes.size());
 
-            if (priceVal != null){
-                price = new BigDecimal(priceVal);
+                    String priceVal = ScraperUtils.findValueInJson(json, "\"price\":");
+                    if (priceVal != null ) price = new BigDecimal(priceVal);
+
+                    break;
+                }
             }
 
-            String rawImg = ScraperUtils.findValueInJson(jsonContent, "\"image\":");
-            if (rawImg != null) img = rawImg
-                    .replace("[", "")
-                    .replace("]", "")
-                    .replace("\"", "").trim();
+            }
 
-
-            log.info("Imagen hallada via JSON-LD: {}", img);
-
-            sizes = ScraperUtils.parseSizesFromJsonLD(jsonContent);
-        }
-
-        if (img == null || img.isEmpty() || img.equals("null") || img.contains("[") ){
-            log.info("JSON-LD no proporcionó imagen válida, intentando Plan B (Meta Tags)...");
-            img = ScraperUtils.extractImageUrl(doc);
-        }
-
+        img = ScraperUtils.extractImageUrl(doc);
         if (price == null){
             Element metaPrice = doc.selectFirst("meta[property='product:price:amount']");
             if (metaPrice != null){
@@ -88,6 +82,7 @@ public class VtexExtractor implements PlatformExtractor{
                 .isAvailable(!sizes.isEmpty())
                 .build();
     }
+        }
 
 
 
@@ -95,4 +90,10 @@ public class VtexExtractor implements PlatformExtractor{
 
 
 
-}
+
+
+
+
+
+
+

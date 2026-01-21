@@ -1,5 +1,9 @@
 package saas.app.engine.scraper.util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import saas.app.core.dto.SizeStockDTO;
@@ -8,6 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScraperUtils {
+
+    private static final ObjectMapper mapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerModule(new JavaTimeModule());
+
 
     public static Integer parseInstallments(String text) { //este metodo lo movemos del ScraperService y lo traemos para aca
         try {
@@ -19,7 +28,10 @@ public class ScraperUtils {
     }
 
     public static String findValueInJson(String json, String key) {
-        if (!json.contains(key)) return null;
+        if (!json.contains(key)){
+            key = key.replace(":", " :");
+            if (!json.contains(key)) return null;
+        }
         try {
             int start = json.indexOf(key) + key.length();
             // Buscamos el final del valor (puede ser una coma, una llave o un corchete)
@@ -38,27 +50,29 @@ public class ScraperUtils {
     }
 
 
-    public static List <SizeStockDTO> parseSizesFromJsonLD(String json){
+    public static List <SizeStockDTO> parseSizesFromJsonLD(String jsonContent){
         List <SizeStockDTO> sizes = new ArrayList<>();
+        try {
+            JsonNode root = mapper.readTree(jsonContent);
 
-        if (json == null) return sizes;
+            JsonNode offersArray = root.path("offers").path("offers");
 
-        String keyword = "\"@type\"";  //terminar de arreglar mañana
-        if (!json.contains(keyword)) return sizes;
+            if (offersArray.isArray()){
+                for (JsonNode offer: offersArray){
+                    String name = offer.path("name").asText();
+                    String availability = offer.path("availability").asText();
 
-        String[] blocks = json.split("\"@type\"");
-        for (String block : blocks){
-            if (block.contains("\"Offer\"") || block.contains("Offer")){
-                String name = findValueInJson(block, "\"name\":");
-                String availability = findValueInJson(block, "\"availability\":");
-
-                if (name != null && !name.isEmpty()){
-                    boolean inStock = availability != null && availability.contains("InStock");
-                    sizes.add(new SizeStockDTO(name.trim(), inStock));
+                    if (!name.isEmpty()){
+                        boolean inStock = availability.contains("InStock");
+                        sizes.add(new SizeStockDTO(name, inStock));
+                    }
                 }
             }
+        } catch (Exception e){
 
         }
+
+
         return sizes;
     }
 
