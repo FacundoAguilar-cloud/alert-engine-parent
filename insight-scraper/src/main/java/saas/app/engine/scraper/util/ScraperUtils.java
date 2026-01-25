@@ -4,13 +4,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import saas.app.core.dto.SizeStockDTO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+@Slf4j
 public class ScraperUtils {
 
     private static final ObjectMapper mapper = new ObjectMapper()
@@ -55,25 +60,44 @@ public class ScraperUtils {
         try {
             JsonNode root = mapper.readTree(jsonContent);
 
-            JsonNode offersArray = root.path("offers").path("offers");
 
-            if (offersArray.isArray()){
-                for (JsonNode offer: offersArray){
-                    String name = offer.path("name").asText();
-                    String availability = offer.path("availability").asText();
+            if (root.isArray()){
+               for (JsonNode node : root){
+                   if (node.path("@type").asText().equals("Product")){
+                       sizes.addAll(extractSizesFromProductNode(node));
+                   }
+               }
+            } else {
+                sizes.addAll(extractSizesFromProductNode(root));
+            }
 
-                    if (!name.isEmpty()){
-                        boolean inStock = availability.contains("InStock");
-                        sizes.add(new SizeStockDTO(name, inStock));
-                    }
+        } catch (Exception e){
+            log.error("Error parseando JSON-LD con Jackson: {}", e.getMessage());
+        }
+        return sizes;
+
+    }
+
+    private static List <SizeStockDTO> extractSizesFromProductNode(JsonNode node){
+        List <SizeStockDTO> sizes = new ArrayList<>();
+
+        JsonNode offersField = node.path("offers");
+        JsonNode mainArray = offersField.isArray() ? offersField : offersField.path("offers");
+
+        if (mainArray.isArray()){
+            for (JsonNode offer : mainArray){
+                String name = offer.has("name") ? offer.get("name").asText() : offer.path("skuName").asText();
+
+                String availability = offer.path("availability").asText();
+                boolean inStock = availability.contains("InStock");
+
+                if (!name.isEmpty() && name.length() < 15){
+                    sizes.add(new SizeStockDTO(name.trim(),inStock));
                 }
             }
-        } catch (Exception e){
-
         }
-
-
         return sizes;
+
     }
 
 
@@ -109,6 +133,28 @@ public class ScraperUtils {
         if (url.startsWith("//")) return "https:"  + url;
 
         return url;
+    }
+
+    public static List <SizeStockDTO> extractSizeFromVtexState(String htmlContent){
+        List<SizeStockDTO> sizes = new ArrayList<>();
+
+        try {
+            Pattern pattern = Pattern.compile("\"skuName\":\"([^\"]+)\".*?\"availability\":\"([^\"]+)\"");
+            Matcher matcher = pattern.matcher(htmlContent);
+
+            while (matcher.find()){
+                String sizeName = matcher.group(1);
+                String availability = matcher.group(2);
+
+                if (sizeName.length() < 15){
+                    boolean inStock = availability.contains("InStock");
+                    sizes.add(new SizeStockDTO(sizeName.trim(),inStock));
+                }
+            }
+        } catch (Exception e){
+            log.error("Error en rescate VTEX IO: {}", e.getMessage());
+        }
+        return sizes.stream().distinct().collect(Collectors.toList());
     }
     
 

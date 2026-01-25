@@ -27,36 +27,50 @@ public class VtexExtractor implements PlatformExtractor{
 
     @Override
     public ExtractorResult extract(Document doc, ProductLink link) {
-        Elements scripts = doc.select("script[type='application/ld+json']");
+        Elements scripts = doc.select("script");
         BigDecimal price = null;
         String img = null;
         List<SizeStockDTO> sizes = new ArrayList<>();
 
+
         log.info("Bloques JSON-LD encontrados: {}", scripts.size());
 
         for (Element script : scripts){
-            String json = script.html();
+            String content = script.html();
 
-            if (json.contains("\"@type\":\"Product\"")){
-                sizes = ScraperUtils.parseSizesFromJsonLD(json);
+            if (content.contains("\"@type\"") && (content.contains("\"Product\"") || content.contains("\"Offer\""))){
 
-                if (!sizes.isEmpty()){
-                    log.info("¡Talles capturados con Jackson!: {}", sizes.size());
+                String priceVal = ScraperUtils.findValueInJson(content, "\"price\":");
+                if (priceVal != null && price == null){
+                    price = new BigDecimal(priceVal);
+                    log.info("Precio hallado en el JSON {}",price);
+                }
 
-                    String priceVal = ScraperUtils.findValueInJson(json, "\"price\":");
-                    if (priceVal != null ) price = new BigDecimal(priceVal);
+                List<SizeStockDTO> foundSizes = ScraperUtils.parseSizesFromJsonLD(content);
 
+                if (!foundSizes.isEmpty()){
+                    sizes = foundSizes;
+
+                    log.info("Talles capturados por el Jackson: {} ", sizes.size());
+                }
+
+                if (price != null && !sizes.isEmpty()){
                     break;
                 }
+
+
             }
 
             }
 
         img = ScraperUtils.extractImageUrl(doc);
+
+
         if (price == null){
             Element metaPrice = doc.selectFirst("meta[property='product:price:amount']");
             if (metaPrice != null){
                 price = PriceParser.parse(metaPrice.attr("content"));
+                log.info("Precio obtenido vía Meta Tag (Plan B): {}", price);
             }
         }
 
@@ -79,7 +93,7 @@ public class VtexExtractor implements PlatformExtractor{
                 .installments(inst)
                 .imageUrl(img)
                 .sizes(sizes)
-                .isAvailable(!sizes.isEmpty())
+                .isAvailable(price != null &&  (!sizes.isEmpty() || img != null ))
                 .build();
     }
         }

@@ -26,6 +26,9 @@ public class ScraperService {
         try {
             Document doc = Jsoup.connect(link.getUrl())
                     .userAgent(USER_AGENT)
+                    .header("Accept-Language", "es-ES,es;q=0.9")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                    .header("Referer", "https://www.google.com/")
                     .timeout(20000)
                     .get();
 
