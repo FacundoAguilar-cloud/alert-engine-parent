@@ -38,7 +38,7 @@ public class VtexExtractor implements PlatformExtractor{
         for (Element script : scripts){
             String content = script.html();
 
-            if (content.contains("\"@type\"") && (content.contains("\"Product\"") || content.contains("\"Offer\""))){
+            if (content.contains("\"@type\"") || content.contains("__STATE__")){
 
                 String priceVal = ScraperUtils.findValueInJson(content, "\"price\":");
                 if (priceVal != null && price == null){
@@ -52,6 +52,11 @@ public class VtexExtractor implements PlatformExtractor{
                     sizes = foundSizes;
 
                     log.info("Talles capturados por el Jackson: {} ", sizes.size());
+                }
+
+                //utilizamos el método nuevo para extraer el vtex-io si es que se está utilizando
+                if (sizes.isEmpty() && content.contains("__STATE__")){
+                    sizes = ScraperUtils.extractSizeFromVtexState(content);
                 }
 
                 if (price != null && !sizes.isEmpty()){

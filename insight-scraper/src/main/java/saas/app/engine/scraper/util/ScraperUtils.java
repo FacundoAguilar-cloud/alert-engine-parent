@@ -134,7 +134,7 @@ public class ScraperUtils {
 
         return url;
     }
-
+    // nuevo método para extraer el vtex-io y hacer incluso más robusto el scraping
     public static List <SizeStockDTO> extractSizeFromVtexState(String htmlContent){
         List<SizeStockDTO> sizes = new ArrayList<>();
 
