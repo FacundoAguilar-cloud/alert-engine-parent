@@ -37,8 +37,8 @@ public class VtexExtractor implements PlatformExtractor{
 
         for (Element script : scripts){
             String content = script.html();
+            if (content.isEmpty()) continue;
 
-            if (content.contains("\"@type\"") || content.contains("__STATE__")){
 
                 String priceVal = ScraperUtils.findValueInJson(content, "\"price\":");
                 if (priceVal != null && price == null){
@@ -46,25 +46,21 @@ public class VtexExtractor implements PlatformExtractor{
                     log.info("Precio hallado en el JSON {}",price);
                 }
 
-                List<SizeStockDTO> foundSizes = ScraperUtils.parseSizesFromJsonLD(content);
-
-                if (!foundSizes.isEmpty()){
-                    sizes = foundSizes;
-
-                    log.info("Talles capturados por el Jackson: {} ", sizes.size());
+                if (sizes.isEmpty()){
+                    sizes = ScraperUtils.parseSizesFromJsonLD(content);
                 }
-
-                //utilizamos el método nuevo para extraer el vtex-io si es que se está utilizando
-                if (sizes.isEmpty() && content.contains("__STATE__")){
+                //intentamos con rescate vtex tambien
+                if (sizes.isEmpty()){
                     sizes = ScraperUtils.extractSizeFromVtexState(content);
                 }
+
 
                 if (price != null && !sizes.isEmpty()){
                     break;
                 }
 
 
-            }
+
 
             }
 

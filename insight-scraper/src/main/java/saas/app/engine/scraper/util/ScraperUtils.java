@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import saas.app.core.dto.SizeStockDTO;
@@ -57,24 +58,34 @@ public class ScraperUtils {
 
     public static List <SizeStockDTO> parseSizesFromJsonLD(String jsonContent){
         List <SizeStockDTO> sizes = new ArrayList<>();
+
+        if (jsonContent == null || jsonContent.isEmpty() ) return sizes;
+
+
         try {
-            JsonNode root = mapper.readTree(jsonContent);
+            Pattern namePatern = Pattern.compile("\"skuName\":\"([^\"]+)\"");
+            Matcher matcher = namePatern.matcher(jsonContent);
 
+            while (matcher.find()){
+                String sizeName = matcher.group(1);
 
-            if (root.isArray()){
-               for (JsonNode node : root){
-                   if (node.path("@type").asText().equals("Product")){
-                       sizes.addAll(extractSizesFromProductNode(node));
-                   }
-               }
-            } else {
-                sizes.addAll(extractSizesFromProductNode(root));
+                int startSearch = matcher.end();
+                int endSearch = Math.min(startSearch + 500, jsonContent.length());
+
+                String context = jsonContent.substring(startSearch, endSearch);
+
+                boolean inStock = context.contains("InStock") || context.contains("true");
+
+                if (sizeName.length() < 15 && !sizeName.equalsIgnoreCase("default")){
+                    sizes.add(new SizeStockDTO(sizeName.trim(), inStock));
+                }
             }
-
         } catch (Exception e){
-            log.error("Error parseando JSON-LD con Jackson: {}", e.getMessage());
+            log.error("Error en extraccion por Regex: {}", e.getMessage());
         }
-        return sizes;
+         return sizes.stream().collect(Collectors.toMap(SizeStockDTO::getSize, s -> s, (s1, s2) -> s1))
+                 .values().stream().toList();
+
 
     }
 
@@ -134,12 +145,12 @@ public class ScraperUtils {
 
         return url;
     }
-    // nuevo método para extraer el vtex-io y hacer incluso más robusto el scraping
+    // nuevo método para extraer el vtex-io y hacer incluso más robusto el scraping (terminar de hacer cambios)
     public static List <SizeStockDTO> extractSizeFromVtexState(String htmlContent){
         List<SizeStockDTO> sizes = new ArrayList<>();
 
         try {
-            Pattern pattern = Pattern.compile("\"skuName\":\"([^\"]+)\".*?\"availability\":\"([^\"]+)\"");
+            Pattern pattern = Pattern.compile("\"name\":\"([^\"]+)\",\"nameComplete\"");
             Matcher matcher = pattern.matcher(htmlContent);
 
             while (matcher.find()){
@@ -147,8 +158,7 @@ public class ScraperUtils {
                 String availability = matcher.group(2);
 
                 if (sizeName.length() < 15){
-                    boolean inStock = availability.contains("InStock");
-                    sizes.add(new SizeStockDTO(sizeName.trim(),inStock));
+                    sizes.add(new SizeStockDTO(sizeName, availability.contains("InStock")));
                 }
             }
         } catch (Exception e){
