@@ -2,6 +2,7 @@ package saas.app.engine.controller;
 
 import com.rabbitmq.client.Return;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import saas.app.core.domain.Product;
 import saas.app.core.domain.ProductLink;
 import saas.app.core.repository.ProductLinkRepository;
 import saas.app.core.repository.ProductRepository;
+import saas.app.core.util.UrlUtils;
 import saas.app.engine.dto.CreateProductRequest;
 import saas.app.engine.dto.ProductComparisonDTO;
 
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class ProductController {
 
     private final ProductRepository productRepository;
     private final ProductLinkRepository linkRepository;
+
 
 
 
@@ -45,10 +49,12 @@ public class ProductController {
                 .price(link.getCurrentPrice())
                 .installments(link.getMaxInstallments())
                 .hasFreeShipping(link.getHasFreeShipping())
-                .url(link.getUrl())
+                        .imageUrl(link.getImageUrl())
+                        .availableSizes(link.getAvailableSizes())
+                        .url(link.getUrl())
                 .lastChecked(link.getLastChecked())
-                .build()
-                ).toList();
+                .build()).collect(Collectors.toList());
+
 
         ProductComparisonDTO response = ProductComparisonDTO.builder()
                 .productName(product.getName())
@@ -70,20 +76,33 @@ public class ProductController {
     @PostMapping("/with-link")
     @Transactional
     public ResponseEntity <Product> createProductWithLink(@RequestBody CreateProductRequest request){
-        Product product = new Product();
-        product.setName(request.getName());
-        product.setBrand(request.getBrand());
-        product.setCategory(request.getCategory());
-        product.setGender(request.getGender());
-        product.setIsActive(true);
-        product.setCreatedAt(LocalDateTime.now());
 
-        Product savedProduct = productRepository.save(product);
+        Product product;
+
+        if (request.getProductId() != null){
+            product = productRepository.findById(request.getProductId())
+                    .orElseThrow( () -> new RuntimeException("Producto no encontrado con ID: "+ request.getProductId()));
+            log.info("Agregando nuevo link al producto existente: {}", product.getName());
+        } else {
+            product = new Product();
+            product.setName(request.getName());
+            product.setBrand(request.getBrand());
+            product.setCategory(request.getCategory());
+            product.setGender(request.getGender());
+            product.setIsActive(true);
+            product.setCreatedAt(LocalDateTime.now());
+
+            product = productRepository.save(product);
+            log.info("Creado nuevo producto maestro: {}", product.getName());
+        }
+
+
 
         ProductLink link = new ProductLink();
-        link.setProduct(savedProduct);
+        //con este metodo del Utils vamos a poder limpiar el link automaticamente
+        link.setUrl(UrlUtils.cleanStoreUrl(request.getUrl()));
+        link.setProduct(product);
         link.setStoreName(request.getStoreName());
-        link.setUrl(request.getUrl());
         link.setPriceSelector(request.getPriceSelector());
         link.setInstallmentsSelector(request.getInstallmentsSelector());
         link.setFreeShippingThreshold(request.getFreeShippingThreshold());
@@ -91,9 +110,21 @@ public class ProductController {
 
         linkRepository.save(link);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
+        return ResponseEntity.status(HttpStatus.CREATED).body(product);
 
     }
+
+        @DeleteMapping("/link/{linkId}")
+        public ResponseEntity <Void> deleteLink(@PathVariable Long linkId){
+
+        linkRepository.deleteById(linkId);
+
+        log.info("Link ID {} eliminado manualmente", linkId);
+
+        return ResponseEntity.noContent().build();
+
+        }
+
 
 
 

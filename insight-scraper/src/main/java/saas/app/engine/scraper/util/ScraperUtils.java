@@ -182,6 +182,7 @@ public class ScraperUtils {
         }
         return sizes.stream().distinct().collect(Collectors.toList());
     }
+
     
 
 }

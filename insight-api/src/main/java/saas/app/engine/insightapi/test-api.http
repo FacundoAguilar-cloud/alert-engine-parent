@@ -49,5 +49,22 @@ Content-Type: application/json
   "isActive": true
 }
 
+### PROBAMOS ENDPOINT PARA TRAER TODOS LOS PRODUCTOS, PRIMERO AGREGAMOS PRODUCTO
+POST http://localhost:8080/api/products/with-link
+Content-Type: application/json
+
+{
+  "productId": "Zapatilla Adidas Court",
+  "brand": "Adidas",
+  "category": "Calzado",
+  "gender": "Unisex",
+  "storeName": "Tienda Oficial Adidas",
+  "url": "https://www.adidas.com.ar/zapatillas-adidas-court/IE0927.html?cm_mmc=AdieSEM_Google_PLA-_-Always_On-_-Shopping-_-IE0927-0011-_-dv:eCom-_-cn:Always_On-_-pc:Originals&cm_mmc1=AR&cm_mmc2=PLA-Multiple-Originals-Other-None-AR-LATAM-eCom-Paid_Search&cm_mmc=AdieSEM_Google_PLA-_-adidas-LAM-AR-PMax-Originals-M-_--_--_-dv:eCom&cm_mmca1=AR&cm_mmca2=&adicl_gclid=Cj0KCQiAhOfLBhCCARIsAJPiopNkQKuzImM9NHAxKqi3IYT_wKMgFASiCHpkASjkPEofzg2dBxVKE2oaApV4EALw_wcB&gclsrc=aw.ds&gad_source=1&gad_campaignid=18867874069&gbraid=0AAAAADrvEsHvWFjaEohjHT2VFrrLKnFjh&gclid=Cj0KCQiAhOfLBhCCARIsAJPiopNkQKuzImM9NHAxKqi3IYT_wKMgFASiCHpkASjkPEofzg2dBxVKE2oaApV4EALw_wcB",
+  "priceSelector": ".price-active",
+  "installmentsSelector": ".installments-info",
+  "freeShippingThreshold": 0.0,
+  "isActive": true
+}
+
 
 

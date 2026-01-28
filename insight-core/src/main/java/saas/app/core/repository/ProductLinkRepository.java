@@ -10,5 +10,7 @@ import java.util.List;
 public interface ProductLinkRepository extends JpaRepository<ProductLink, Long> {
 
 
-    List<ProductLink> findByProductIdOrderByCurrentPriceAsc(Long id);
+    List <ProductLink> findByProductIdOrderByCurrentPriceAsc(Long id);
+
+
 }

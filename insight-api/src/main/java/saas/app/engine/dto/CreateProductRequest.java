@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 @Data
 public class CreateProductRequest {
-
+    private Long productId;
     private String name;
     private String brand;
     private String category;

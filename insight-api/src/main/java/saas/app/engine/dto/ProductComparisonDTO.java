@@ -23,6 +23,8 @@ public class ProductComparisonDTO {
     private BigDecimal price;
     private Integer installments;
     private Boolean hasFreeShipping;
+    private String imageUrl;
+    private String availableSizes;
     private String url;
     private LocalDateTime lastChecked;
     }
