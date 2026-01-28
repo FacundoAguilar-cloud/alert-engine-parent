@@ -14,6 +14,7 @@ import saas.app.engine.scraper.util.ScraperUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.IllegalFormatCodePointException;
 import java.util.List;
 
 @Component
@@ -37,29 +38,33 @@ public class VtexExtractor implements PlatformExtractor{
 
         for (Element script : scripts){
             String content = script.html();
+            String type = script.attr("type");
+
             if (content.isEmpty()) continue;
 
-
-                String priceVal = ScraperUtils.findValueInJson(content, "\"price\":");
-                if (priceVal != null && price == null){
-                    price = new BigDecimal(priceVal);
-                    log.info("Precio hallado en el JSON {}",price);
+            //ESTRATEGIA A (Si es JSON-LD usamos Jackson)
+            if ("application/ld+json".equals(type)){
+                if (price == null){
+                    String priceVal = ScraperUtils.findValueInJson(content, "\"price\":");
+                    if (priceVal != null) price = new BigDecimal(priceVal);
                 }
 
-                if (sizes.isEmpty()){
-                    sizes = ScraperUtils.parseSizesFromJsonLD(content);
+                List <SizeStockDTO> foundSizes = ScraperUtils.parseSizesFromJsonLD(content);
+                if (!foundSizes.isEmpty()){
+                    sizes.addAll(foundSizes);
                 }
-                //intentamos con rescate vtex tambien
-                if (sizes.isEmpty()){
-                    sizes = ScraperUtils.extractSizeFromVtexState(content);
+             //ESTRATEGIA B (Si es el bloque de estado de VTEX, usamos regex)
+            } else if (content.contains("__STATE__") || content.contains("skuName")) {
+                List <SizeStockDTO> rescuedSize = ScraperUtils.extractSizeFromVtexState(content);
+
+                if (!rescuedSize.isEmpty()){
+                    sizes.addAll(rescuedSize);
                 }
+            }
 
-
-                if (price != null && !sizes.isEmpty()){
+            if (price != null && !sizes.isEmpty()){
                     break;
                 }
-
-
 
 
             }

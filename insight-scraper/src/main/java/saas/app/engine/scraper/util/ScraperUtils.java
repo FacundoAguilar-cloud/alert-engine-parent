@@ -59,33 +59,42 @@ public class ScraperUtils {
     public static List <SizeStockDTO> parseSizesFromJsonLD(String jsonContent){
         List <SizeStockDTO> sizes = new ArrayList<>();
 
-        if (jsonContent == null || jsonContent.isEmpty() ) return sizes;
+       if (jsonContent.trim().startsWith("var")  || jsonContent.trim().startsWith("(")){
+           return sizes;
+       }
+       try{
+            JsonNode root = mapper.readTree(jsonContent);
+           List<JsonNode> offersNodes = root.findValues("offers");
 
+           for (JsonNode node : offersNodes) {
 
-        try {
-            Pattern namePatern = Pattern.compile("\"skuName\":\"([^\"]+)\"");
-            Matcher matcher = namePatern.matcher(jsonContent);
+               if (node.isArray()) {
+                   extractFromNodeArray(node, sizes);
+               }
 
-            while (matcher.find()){
-                String sizeName = matcher.group(1);
+               else if (node.has("offers") && node.get("offers").isArray()) {
+                   extractFromNodeArray(node.get("offers"), sizes);
+               }
+           }
+       } catch (Exception e){
 
-                int startSearch = matcher.end();
-                int endSearch = Math.min(startSearch + 500, jsonContent.length());
+       }
+        return sizes.stream().distinct().collect(Collectors.toList());
 
-                String context = jsonContent.substring(startSearch, endSearch);
+    }
 
-                boolean inStock = context.contains("InStock") || context.contains("true");
+    private static void extractFromNodeArray(JsonNode array, List <SizeStockDTO> resultList){
 
-                if (sizeName.length() < 15 && !sizeName.equalsIgnoreCase("default")){
-                    sizes.add(new SizeStockDTO(sizeName.trim(), inStock));
-                }
+        for (JsonNode offer : array){
+            String name = offer.has("name") ? offer.get("name").asText() : offer.path("skuName").asText();
+
+            String availability = offer.path("availability").asText();
+            boolean inStock = availability.toLowerCase().contains("instock");
+
+            if (!name.isEmpty() && name.length()  < 15){
+                resultList.add(new SizeStockDTO(name.trim(), inStock));
             }
-        } catch (Exception e){
-            log.error("Error en extraccion por Regex: {}", e.getMessage());
         }
-         return sizes.stream().collect(Collectors.toMap(SizeStockDTO::getSize, s -> s, (s1, s2) -> s1))
-                 .values().stream().toList();
-
 
     }
 
@@ -150,19 +159,26 @@ public class ScraperUtils {
         List<SizeStockDTO> sizes = new ArrayList<>();
 
         try {
-            Pattern pattern = Pattern.compile("\"name\":\"([^\"]+)\",\"nameComplete\"");
+            Pattern pattern = Pattern.compile("\"skuName\":\"([^\"]+)\"");
             Matcher matcher = pattern.matcher(htmlContent);
 
             while (matcher.find()){
                 String sizeName = matcher.group(1);
-                String availability = matcher.group(2);
 
-                if (sizeName.length() < 15){
-                    sizes.add(new SizeStockDTO(sizeName, availability.contains("InStock")));
+                if (sizeName.length() < 10){
+                   int start = matcher.end();
+                   int end = Math.min(start + 500, htmlContent.length());
+
+                   String context = htmlContent.substring(start, end);
+
+
+                   boolean hasStock = context.contains("InStock")  || context.contains("\"available\":true") || context.contains("\"AvailableQuantity\":");
+
+                   sizes.add(new SizeStockDTO(sizeName, hasStock));
                 }
             }
         } catch (Exception e){
-            log.error("Error en rescate VTEX IO: {}", e.getMessage());
+            log.error("Error en rescate por texto: {}", e.getMessage());
         }
         return sizes.stream().distinct().collect(Collectors.toList());
     }
