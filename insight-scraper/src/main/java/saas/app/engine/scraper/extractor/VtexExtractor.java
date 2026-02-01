@@ -46,6 +46,8 @@ public class VtexExtractor implements PlatformExtractor{
             if ("application/ld+json".equals(type)){
                 if (price == null){
                     String priceVal = ScraperUtils.findValueInJson(content, "\"price\":");
+                    if (priceVal == null) priceVal = ScraperUtils.findValueInJson(content, "\"lowPrice\":");
+
                     if (priceVal != null) price = new BigDecimal(priceVal);
                 }
 
@@ -60,16 +62,19 @@ public class VtexExtractor implements PlatformExtractor{
                 if (!rescuedSize.isEmpty()){
                     sizes.addAll(rescuedSize);
                 }
-            }
 
-            if (price != null && !sizes.isEmpty()){
-                    break;
-                }
-
+            if (price != null && !sizes.isEmpty())  break;
 
             }
+        }
+
 
         img = ScraperUtils.extractImageUrl(doc);
+
+        if (price == null){
+            log.info("Precio no hallado en JSON, intentando Regex en todo el HTML...");
+            price = ScraperUtils.extractPriceWithRegex(doc.html());
+        }
 
 
         if (price == null){
@@ -101,8 +106,12 @@ public class VtexExtractor implements PlatformExtractor{
                 .sizes(sizes)
                 .isAvailable(price != null &&  (!sizes.isEmpty() || img != null ))
                 .build();
+
     }
-        }
+    }
+
+
+
 
 
 

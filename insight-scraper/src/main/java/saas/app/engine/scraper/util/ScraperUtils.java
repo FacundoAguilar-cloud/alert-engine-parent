@@ -10,6 +10,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import saas.app.core.dto.SizeStockDTO;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -181,6 +182,17 @@ public class ScraperUtils {
             log.error("Error en rescate por texto: {}", e.getMessage());
         }
         return sizes.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static BigDecimal extractPriceWithRegex(String html){
+
+        Pattern pattern = Pattern.compile("\"price\":\\s*\"?([0-9]+(?:\\.[0-9]{1,2})?)\"?");
+        Matcher matcher = pattern.matcher(html);
+
+        if (matcher.find()){
+            return new BigDecimal(matcher.group(1));
+        }
+        return null;
     }
 
     

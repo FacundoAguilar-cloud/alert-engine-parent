@@ -16,6 +16,7 @@ import saas.app.engine.dto.CreateProductRequest;
 import saas.app.engine.dto.ProductComparisonDTO;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,9 @@ public class ProductController {
                         .availableSizes(link.getAvailableSizes())
                         .url(link.getUrl())
                 .lastChecked(link.getLastChecked())
-                .build()).collect(Collectors.toList());
+                .build()).sorted(Comparator.comparing(ProductComparisonDTO.OfferDTO::getPrice, Comparator
+                        .nullsLast(Comparator.naturalOrder()))).collect(Collectors.toList());
+
 
 
         ProductComparisonDTO response = ProductComparisonDTO.builder()

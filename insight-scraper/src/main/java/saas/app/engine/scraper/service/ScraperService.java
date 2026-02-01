@@ -26,11 +26,17 @@ public class ScraperService {
         try {
             Document doc = Jsoup.connect(link.getUrl())
                     .userAgent(USER_AGENT)
-                    .header("Accept-Language", "es-ES,es;q=0.9")
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                    .header("Accept-Language", "es-AR,es;q=0.9,en;q=0.8")
                     .header("Referer", "https://www.google.com/")
+                    .ignoreHttpErrors(true)
                     .timeout(20000)
                     .get();
+
+            log.info("Longitud del HTML recibido: {}", doc.html().length());
+            if (doc.html().length() < 1000) {
+                log.warn("HTML demasiado corto. Posible bloqueo o página de error.");
+            }
 
             // detectamos la plataforma
             StorePlatform platform = detectPlatform(doc,link.getUrl());
