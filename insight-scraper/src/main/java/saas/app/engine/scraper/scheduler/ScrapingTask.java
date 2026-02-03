@@ -14,9 +14,12 @@ import saas.app.engine.scraper.service.ScraperService;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -35,24 +38,25 @@ public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recole
     @Scheduled(fixedRate = 60000)
     public void runScrapingCyle(){
         log.info("Iniciando ciclo de scraping PARALELO");
-        try {
+
             List<ProductLink> links = linkRepository.findAll();
             if (links.isEmpty()) {
                 log.info("No hay links para procesar.");
             }
-            for (ProductLink link : links) {
-                processLink(link);
-            }
-        } catch (Exception e) {
-            log.error("Error en el ciclo de scraping: {}", e.getMessage());
+            // basicamente esto sería una lista de tareas futuras
+            List <CompletableFuture<Void>> futures = links
+                    .stream()
+                    .map(link -> CompletableFuture.runAsync(() -> processLink(link), executor))
+                    .collect(Collectors.toList());
+
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenRun( () -> log.info("Ciclo de scraping finalizado con éxito."))
+                    .join(); //esto sirve para que el shceduled espere a que todos terminen
         }
-
-    }
-
 
     private void processLink(ProductLink link) {
         try {
-            log.info("Analizando: {} enla tienda {} ", link.getProduct().getName(), link.getStoreName());
+            log.info("[Hilo: {}] Analizando: {} en {}", Thread.currentThread().getName(), link.getProduct().getName(), link.getStoreName());
 
             ScraperData scraperData = scraperService.getLastestData(link);
 
@@ -75,13 +79,16 @@ public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recole
                 log.info("Datos enviados a la cola para: {} - ${} ", link.getStoreName(), scraperData.getPrice());
             }
 
-
-
         } catch (Exception e){
-            log.error("Error procesando el link {}: {} ", link.getUrl(), e.getMessage());
+            log.error("Error en hilo al procesar {}: {} ", link.getStoreName(), e.getMessage());
         }
     }
-}
+
+    }
+
+
+
+
 
 
 
