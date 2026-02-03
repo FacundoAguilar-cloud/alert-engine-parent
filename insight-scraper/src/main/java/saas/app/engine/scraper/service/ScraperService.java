@@ -81,7 +81,8 @@ public class ScraperService {
             return StorePlatform.VTEX;
         }
 
-        if (url.contains("dexter.com.ar") || url.contains("adidas.com.ar")){
+        if (url.contains("dexter.com.ar") || url.contains("adidas.com.ar") || url.contains("moov.com.ar")
+                ||  urlLower.contains("stockcenter.com.ar")){
             return StorePlatform.VTEX;
         }
 

@@ -160,28 +160,33 @@ public class ScraperUtils {
         List<SizeStockDTO> sizes = new ArrayList<>();
 
         try {
-            Pattern pattern = Pattern.compile("\"skuName\":\"([^\"]+)\"");
+            Pattern pattern = Pattern.compile("\"(skuName|name)\":\"([^\"]+)\"");
             Matcher matcher = pattern.matcher(htmlContent);
 
             while (matcher.find()){
-                String sizeName = matcher.group(1);
+                String label = matcher.group(1);
+                String sizeValue = matcher.group(2);
 
-                if (sizeName.length() < 10){
+
+                if (sizeValue.length() < 8 && !sizeValue.equalsIgnoreCase("default")){
                    int start = matcher.end();
-                   int end = Math.min(start + 500, htmlContent.length());
+                   int end = Math.min(start + 600, htmlContent.length());
 
                    String context = htmlContent.substring(start, end);
 
 
-                   boolean hasStock = context.contains("InStock")  || context.contains("\"available\":true") || context.contains("\"AvailableQuantity\":");
+                   boolean hasStock = context.contains("InStock")
+                           || context.contains("\"available\":true")
+                           || context.contains("\"AvailableQuantity\":");
 
-                   sizes.add(new SizeStockDTO(sizeName, hasStock));
+                   sizes.add(new SizeStockDTO(sizeValue, hasStock));
                 }
             }
         } catch (Exception e){
             log.error("Error en rescate por texto: {}", e.getMessage());
         }
-        return sizes.stream().distinct().collect(Collectors.toList());
+        return sizes.stream().collect(Collectors.toMap(SizeStockDTO::getSize,s -> s, (s1, s2) -> s1))
+                .values().stream().toList();
     }
 
     public static BigDecimal extractPriceWithRegex(String html){

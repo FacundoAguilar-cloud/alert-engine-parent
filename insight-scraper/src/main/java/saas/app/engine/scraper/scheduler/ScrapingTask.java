@@ -15,6 +15,8 @@ import saas.app.engine.scraper.service.ScraperService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 @Component
@@ -25,9 +27,14 @@ public class ScrapingTask { //pasa de ser una especie de "vigilante" a un recole
     private final ScraperService scraperService;
     private final RabbitTemplate rabbitTemplate;
 
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    //vamos a aplicar hilos para acelerar el proceso de scraping
+
+
+
     @Scheduled(fixedRate = 60000)
     public void runScrapingCyle(){
-        log.info("Iniciando ciclo de scraping...");
+        log.info("Iniciando ciclo de scraping PARALELO");
         try {
             List<ProductLink> links = linkRepository.findAll();
             if (links.isEmpty()) {
