@@ -14,6 +14,7 @@ import saas.app.core.repository.PriceHistoryRepository;
 import saas.app.core.repository.ProductLinkRepository;
 import saas.app.core.service.TelegramNotificationService;
 
+import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,23 +28,41 @@ public class ProductUpdateConsumer {
 
     @RabbitListener(queues = RabbitConfig.QUEUE_ALERTS, containerFactory = "rabbitListenerContainerFactory")
     @Transactional
-    public void receiveMessage(ProductUpdateEvent event){
+    public void receiveMessage(ProductUpdateEvent event) {
         log.info(" Procesando actualización para el producto : {} en la tienda: {}.", event.getProductId(), event.getStoreName());
 
         //buscamos link en la DB
         ProductLink link = linkRepository
                 .findById(event.getLinkId()).orElseThrow(() -> new RuntimeException("Link no encontrado"));
-        boolean isDeal = false;
-        if (link.getCurrentPrice() !=null && event.getCurrentPrice().compareTo(link.getCurrentPrice()) < 0){
 
-            isDeal = true;
-            log.warn("¡Oferta detectada! El precio bajó de {} a {}", link.getCurrentPrice(), event.getCurrentPrice());
+        //COMPARACIÓN INTELIGENTE DE PRECIO
+        BigDecimal oldPrice = link.getCurrentPrice();
+        BigDecimal newPrice = event.getCurrentPrice();
 
+        boolean priceChanged = (oldPrice == null && newPrice != null) || (oldPrice != null && newPrice != null &&
+                oldPrice.compareTo(newPrice) != 0);
+
+        if (priceChanged) {
+            log.info("Cambio de precio detectado para {}: {} -> {}", link.getStoreName(), oldPrice, newPrice);
+
+            PriceHistory history = PriceHistory.builder()
+                    .productLink(link)
+                    .price(newPrice)
+                    .detectedAt(event.getLastChecked())
+                    .build();
+            historyRepository.save(history);
+
+
+            if (oldPrice != null && newPrice.compareTo(oldPrice) < 0) {
+                telegramService.sendMeTelegramAlert(link
+                        .getStoreName(), "Precio anterior" + oldPrice, "OFERTA! Nuevo precio" + newPrice);
+            }
         }
 
+
         String sizesText = "";
-        if (event.getSizes() != null){
-            String sizesList = event.getSizes().stream()
+        if (event.getSizes() != null && !event.getSizes().isEmpty()) {
+            sizesText = event.getSizes().stream()
                     .filter(SizeStockDTO::getAvailable)
                     .map(SizeStockDTO::getSize)
                     .collect(Collectors.joining(", "));
@@ -52,7 +71,7 @@ public class ProductUpdateConsumer {
         //actualizamos el estado actual de las cosas.
         link.setImageUrl(event.getImageUrl());
         link.setAvailableSizes(sizesText);
-        link.setCurrentPrice(event.getCurrentPrice());
+        link.setCurrentPrice(newPrice);
         link.setMaxInstallments(event.getInstallments());
         link.setHasFreeShipping(event.getHasFreeShipping());
         link.setLastChecked(event.getLastChecked());
@@ -60,21 +79,9 @@ public class ProductUpdateConsumer {
 
         linkRepository.save(link);
 
-        PriceHistory history = PriceHistory.builder()
-                .productLink(link)
-                .price(event.getCurrentPrice())
-                .detectedAt(event.getLastChecked())
-                .build();
-            historyRepository.save(history);
 
-            if (isDeal){
-                String message = String.format("Nuevo precio bajo: %s\nTalles disponibles: %s", event.getCurrentPrice()
-                        , sizesText.isEmpty() ? "Sin stock" : sizesText);
-                telegramService
-                        .sendMeTelegramAlert(link.getStoreName(),
-                                "Precio anterior:" + link.getCurrentPrice()
-                                ,"NUEVO PRECIO BAJO:" + event.getCurrentPrice());
-            }
+
+
 
     }
 }

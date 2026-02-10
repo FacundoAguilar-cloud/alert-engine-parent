@@ -7,12 +7,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import saas.app.core.domain.PriceHistory;
 import saas.app.core.domain.Product;
 import saas.app.core.domain.ProductLink;
+import saas.app.core.repository.PriceHistoryRepository;
 import saas.app.core.repository.ProductLinkRepository;
 import saas.app.core.repository.ProductRepository;
 import saas.app.core.util.UrlUtils;
 import saas.app.engine.dto.CreateProductRequest;
+import saas.app.engine.dto.PricePointDTO;
 import saas.app.engine.dto.ProductComparisonDTO;
 
 import java.time.LocalDateTime;
@@ -30,6 +33,7 @@ public class ProductController {
 
     private final ProductRepository productRepository;
     private final ProductLinkRepository linkRepository;
+    private final PriceHistoryRepository historyRepository;
 
 
 
@@ -68,6 +72,20 @@ public class ProductController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    @GetMapping("/links/{linkId}/trend")
+    public ResponseEntity <List<PricePointDTO>> getPriceTrend(@PathVariable Long linkId){
+        if (!linkRepository.existsById(linkId)){
+            return ResponseEntity.notFound().build();
+        }
+
+        List <PriceHistory> history = historyRepository.findByProductLinkIdOrderByDetectedAtAsc(linkId);
+
+        List <PricePointDTO> trend = history.stream().map(h -> PricePointDTO.builder()
+                .price(h.getPrice()).date(h.getDetectedAt()).build()).collect(Collectors.toList());
+
+        return ResponseEntity.ok(trend);
     }
 
     @GetMapping("/search")
