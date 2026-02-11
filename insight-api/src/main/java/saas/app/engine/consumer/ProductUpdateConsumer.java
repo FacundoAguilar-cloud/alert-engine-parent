@@ -3,6 +3,7 @@ package saas.app.engine.consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import saas.app.core.config.RabbitConfig;
@@ -15,6 +16,8 @@ import saas.app.core.repository.ProductLinkRepository;
 import saas.app.core.service.TelegramNotificationService;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,6 +32,8 @@ public class ProductUpdateConsumer {
     @RabbitListener(queues = RabbitConfig.QUEUE_ALERTS, containerFactory = "rabbitListenerContainerFactory")
     @Transactional
     public void receiveMessage(ProductUpdateEvent event) {
+
+        BigDecimal newPrice = event.getCurrentPrice();
         log.info(" Procesando actualización para el producto : {} en la tienda: {}.", event.getProductId(), event.getStoreName());
 
         //buscamos link en la DB
@@ -36,26 +41,28 @@ public class ProductUpdateConsumer {
                 .findById(event.getLinkId()).orElseThrow(() -> new RuntimeException("Link no encontrado"));
 
         //COMPARACIÓN INTELIGENTE DE PRECIO
-        BigDecimal oldPrice = link.getCurrentPrice();
-        BigDecimal newPrice = event.getCurrentPrice();
 
-        boolean priceChanged = (oldPrice == null && newPrice != null) || (oldPrice != null && newPrice != null &&
-                oldPrice.compareTo(newPrice) != 0);
+        Optional <PriceHistory> lastHistory = historyRepository.findFirstByProductLinkIdOrderByDetectedAtDesc(link.getId());
 
-        if (priceChanged) {
-            log.info("Cambio de precio detectado para {}: {} -> {}", link.getStoreName(), oldPrice, newPrice);
+
+        boolean realPriceChanged = (lastHistory.isEmpty() || lastHistory.get().getPrice().compareTo(newPrice) != 0);
+
+        if (realPriceChanged) {
+            log.info("Cambio de precio detectado para {}:  -> {}", link.getStoreName(), newPrice);
+
+            log.info("HISTORIAL GUARDADO EXITOSAMENTE");
 
             PriceHistory history = PriceHistory.builder()
                     .productLink(link)
                     .price(newPrice)
-                    .detectedAt(event.getLastChecked())
+                    .detectedAt(LocalDateTime.now())
                     .build();
             historyRepository.save(history);
 
 
-            if (oldPrice != null && newPrice.compareTo(oldPrice) < 0) {
+            if (lastHistory.isPresent() & newPrice.compareTo(lastHistory.get().getPrice()) < 0) {
                 telegramService.sendMeTelegramAlert(link
-                        .getStoreName(), "Precio anterior" + oldPrice, "OFERTA! Nuevo precio" + newPrice);
+                        .getStoreName(), "Precio anterior" + lastHistory.get().getPrice(), "OFERTA! Nuevo precio" + newPrice);
             }
         }
 
@@ -74,12 +81,10 @@ public class ProductUpdateConsumer {
         link.setCurrentPrice(newPrice);
         link.setMaxInstallments(event.getInstallments());
         link.setHasFreeShipping(event.getHasFreeShipping());
-        link.setLastChecked(event.getLastChecked());
+        link.setLastChecked(LocalDateTime.now());
         link.setIsAvailable(event.getIsAvailable());
 
         linkRepository.save(link);
-
-
 
 
 

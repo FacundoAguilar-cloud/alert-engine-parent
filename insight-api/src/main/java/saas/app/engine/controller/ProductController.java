@@ -16,6 +16,7 @@ import saas.app.core.repository.ProductRepository;
 import saas.app.core.util.UrlUtils;
 import saas.app.engine.dto.CreateProductRequest;
 import saas.app.engine.dto.PricePointDTO;
+import saas.app.engine.dto.ProductCatalogDTO;
 import saas.app.engine.dto.ProductComparisonDTO;
 
 import java.time.LocalDateTime;
@@ -86,6 +87,11 @@ public class ProductController {
                 .price(h.getPrice()).date(h.getDetectedAt()).build()).collect(Collectors.toList());
 
         return ResponseEntity.ok(trend);
+    }
+
+    @GetMapping("/catalog")
+    public ResponseEntity <List<ProductCatalogDTO>> getCatalog(@RequestParam String search){
+
     }
 
     @GetMapping("/search")
