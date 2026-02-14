@@ -13,7 +13,7 @@ public class ProductCatalogDTO {
     private String brand;
     private String category;
     private BigDecimal minPrice; //precio mas bajo del producto en cuestión
-    private String bestOferrStore; //cual es la tienda que tiene ese precio más bajo
+    private String bestOfferStore; //cual es la tienda que tiene ese precio más bajo
     private String imageUrl;
     private Integer totalOffers; //cuantas tiendas venden ese producto
 

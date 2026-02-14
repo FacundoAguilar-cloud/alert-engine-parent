@@ -22,6 +22,7 @@ import saas.app.engine.dto.ProductComparisonDTO;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -90,8 +91,32 @@ public class ProductController {
     }
 
     @GetMapping("/catalog")
-    public ResponseEntity <List<ProductCatalogDTO>> getCatalog(@RequestParam String search){
+    public ResponseEntity <List<ProductCatalogDTO>> getCatalog(@RequestParam(required = false) String search){
 
+        List <Product> products = (search != null)
+                ? productRepository.findByNameContainingIgnoreCase(search)
+                : productRepository.findAll();
+
+        List <ProductCatalogDTO> catalog = products.stream().map(product -> {
+            Optional <ProductLink> bestLink = product
+                    .getLinks().stream()
+                    .filter(l -> l.getCurrentPrice() != null)
+                    .min(Comparator.comparing(ProductLink::getCurrentPrice));
+
+
+            return ProductCatalogDTO.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .brand(product.getBrand())
+                    .category(product.getCategory())
+                    .minPrice(bestLink.map(ProductLink::getCurrentPrice).orElse(null))
+                    .bestOfferStore(bestLink.map(ProductLink::getStoreName).orElse("Sin stock."))
+                    .imageUrl(bestLink.map(ProductLink::getImageUrl).orElse(null))
+                    .totalOffers(product.getLinks().size())
+                    .build();
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(catalog);
     }
 
     @GetMapping("/search")
