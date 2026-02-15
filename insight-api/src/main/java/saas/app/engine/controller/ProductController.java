@@ -3,6 +3,9 @@ package saas.app.engine.controller;
 import com.rabbitmq.client.Return;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,13 +94,15 @@ public class ProductController {
     }
 
     @GetMapping("/catalog")
-    public ResponseEntity <List<ProductCatalogDTO>> getCatalog(@RequestParam(required = false) String search){
+    public ResponseEntity <Page<ProductCatalogDTO>> getCatalog(
+            @RequestParam (required = false) String q,
+            @RequestParam (required = false) String brand,
+            @RequestParam (required = false) String category,
+            @PageableDefault(size = 20, sort = "name")Pageable pageable){
+        //vamos a utilizar page y no list, pasa de a 20 productos y los almacena en páginas
+        Page<Product> productPage = productRepository.findWithFilters(q, brand, category, pageable);
 
-        List <Product> products = (search != null)
-                ? productRepository.findByNameContainingIgnoreCase(search)
-                : productRepository.findAll();
-
-        List <ProductCatalogDTO> catalog = products.stream().map(product -> {
+        Page <ProductCatalogDTO> dtoPage = productPage.map(product -> {
             Optional <ProductLink> bestLink = product
                     .getLinks().stream()
                     .filter(l -> l.getCurrentPrice() != null)
@@ -114,9 +119,9 @@ public class ProductController {
                     .imageUrl(bestLink.map(ProductLink::getImageUrl).orElse(null))
                     .totalOffers(product.getLinks().size())
                     .build();
-        }).collect(Collectors.toList());
+        });
 
-        return ResponseEntity.ok(catalog);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/search")
