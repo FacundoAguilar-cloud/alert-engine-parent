@@ -1,6 +1,7 @@
 package saas.app.engine.controller;
 
 import com.rabbitmq.client.Return;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import saas.app.core.domain.PriceHistory;
 import saas.app.core.domain.Product;
 import saas.app.core.domain.ProductLink;
@@ -132,13 +134,13 @@ public class ProductController {
 
     @PostMapping("/with-link")
     @Transactional
-    public ResponseEntity <Product> createProductWithLink(@RequestBody CreateProductRequest request){
+    public ResponseEntity <Product> createProductWithLink(@Valid @RequestBody CreateProductRequest request){
 
         Product product;
 
         if (request.getProductId() != null){
             product = productRepository.findById(request.getProductId())
-                    .orElseThrow( () -> new RuntimeException("Producto no encontrado con ID: "+ request.getProductId()));
+                    .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El producto que se busca no existe."));
             log.info("Agregando nuevo link al producto existente: {}", product.getName());
         } else {
             product = new Product();
