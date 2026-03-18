@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,7 @@ import saas.app.core.repository.PriceHistoryRepository;
 import saas.app.core.repository.ProductLinkRepository;
 import saas.app.core.repository.ProductRepository;
 import saas.app.core.util.UrlUtils;
-import saas.app.engine.dto.CreateProductRequest;
-import saas.app.engine.dto.PricePointDTO;
-import saas.app.engine.dto.ProductCatalogDTO;
-import saas.app.engine.dto.ProductComparisonDTO;
+import saas.app.engine.dto.*;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -182,6 +180,24 @@ public class ProductController {
 
         return ResponseEntity.noContent().build();
 
+        }
+
+        @GetMapping("/deals")
+        public ResponseEntity <List<ProductDealDTO>> getTopDeals(@RequestParam(defaultValue = "10") int limit){
+            List <ProductLink> deals = linkRepository.findTopDeals(PageRequest.of(0, limit));
+
+            List <ProductDealDTO> response = deals.stream().map( link -> ProductDealDTO.builder()
+                    .productId(link.getProduct().getId())
+                    .productName(link.getProduct().getName())
+                    .brand(link.getProduct().getBrand())
+                    .storeName(link.getStoreName())
+                    .currentPrice(link.getCurrentPrice())
+                    .oldPrice(link.getPreviousPrice())
+                    .imageUrl(link.getImageUrl())
+                    .build())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(response);
         }
 
 

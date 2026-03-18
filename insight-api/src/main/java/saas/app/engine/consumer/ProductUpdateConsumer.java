@@ -78,6 +78,7 @@ public class ProductUpdateConsumer {
         //actualizamos el estado actual de las cosas.
         link.setImageUrl(event.getImageUrl());
         link.setAvailableSizes(sizesText);
+        link.setPreviousPrice(link.getCurrentPrice());
         link.setCurrentPrice(newPrice);
         link.setMaxInstallments(event.getInstallments());
         link.setHasFreeShipping(event.getHasFreeShipping());

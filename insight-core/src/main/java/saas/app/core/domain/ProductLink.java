@@ -28,6 +28,7 @@ public class ProductLink {
     private String imageUrl;
 
     private BigDecimal currentPrice;
+    private BigDecimal previousPrice;
     private Integer maxInstallments; //cantidad de cuotas maximas
     private Boolean hasFreeShipping;
     private BigDecimal freeShippingThreshold;
