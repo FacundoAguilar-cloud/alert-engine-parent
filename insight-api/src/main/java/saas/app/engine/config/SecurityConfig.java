@@ -32,11 +32,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //publico
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/favorites/**").authenticated()
 
                         //privado
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/favorites/**").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/favorites/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
