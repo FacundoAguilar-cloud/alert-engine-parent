@@ -12,7 +12,7 @@ public interface FavoriteProductRepository extends JpaRepository<FavoriteProduct
 
     List<FavoriteProduct> findByUserAuth0Subject(String auth0Subject);
 
-    Optional<FavoriteProduct> findUserByAuth0SubjectAndProductId(String auth0Subject, Long productId);
+    Optional<FavoriteProduct> findByUserAuth0SubjectAndProductId(String auth0Subject, Long productId);
 
     boolean existsByUserAuth0SubjectAndProductId(String auth0Subject, Long productId);
 

@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByAuth0Subject(String auth0Subject);
 
-    boolean existByAuth0Subject(String auth0Subject);
+    boolean existsByAuth0Subject(String auth0Subject);
 }

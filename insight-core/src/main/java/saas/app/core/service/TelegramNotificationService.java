@@ -17,8 +17,8 @@ public class TelegramNotificationService {
     private final RestTemplate restTemplate = new RestTemplate();
 
 
-    public TelegramNotificationService(@Value("${TELEGRAM_BOT_TOKEN}") String botToken,
-                                       @Value("${TELEGRAM_CHAT_ID}") String chatId) {
+    public TelegramNotificationService(@Value("${app.telegram.bot-token}") String botToken,
+                                       @Value("${app.telegram.chat-id}") String chatId) {
         this.botToken = botToken;
         this.chatId = chatId;
     }
