@@ -30,16 +30,16 @@ public class SecurityConfig {
                 .csrf( csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) )
                 .authorizeHttpRequests(auth -> auth
-                        //publico
+                        //Obtener
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/favorites/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/favorites/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
-                        //privado
+                        //Agregar
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/favorites/**").hasAuthority("ROLE_ADMIN")
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/favorites/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/favorites/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
+                        //Borrar
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/favorites/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
 
                         .anyRequest().authenticated()
                 )

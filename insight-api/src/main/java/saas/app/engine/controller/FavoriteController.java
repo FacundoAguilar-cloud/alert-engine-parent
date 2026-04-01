@@ -36,7 +36,7 @@ public class FavoriteController {
         String auth0Subject = securityService.getCurrentUserAuth0Subject();
         ensureUserExists(auth0Subject);
 
-        List<FavoriteProduct> favorites = favoriteProductRepository.findByUserAuth0Subject(auth0Subject);
+        List<FavoriteProduct> favorites = favoriteProductRepository.findByUser_Auth0Subject(auth0Subject);
 
         List <FavoriteResponse> response = favorites.stream().map(this::mapToResponse).collect(Collectors.toList());
 
