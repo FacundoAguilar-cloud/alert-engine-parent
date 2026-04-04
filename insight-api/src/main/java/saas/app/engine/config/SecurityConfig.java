@@ -30,6 +30,9 @@ public class SecurityConfig {
                 .csrf( csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) )
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos de autenticación
+                        .requestMatchers("/api/auth/login", "/api/auth/callback", "/api/auth/logout").permitAll()
+                        
                         //Obtener
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/favorites/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER")
