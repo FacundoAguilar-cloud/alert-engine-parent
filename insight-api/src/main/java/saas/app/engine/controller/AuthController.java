@@ -13,7 +13,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
+public class AuthController  {
 
     private final AuthService authService;
 
